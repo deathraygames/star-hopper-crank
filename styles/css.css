@@ -88,6 +88,9 @@ button.full-icon .material-icons,
 	font-size: 200%;
 }
 
+button.build {
+	float: right;
+}
 
 .ship-info {
 	position: fixed;
@@ -99,7 +102,7 @@ button.full-icon .material-icons,
 }
 	.ship-info dt {
 		display: inline-block;
-		width: 6em;
+		width: 11em;
 		margin-top: 0.5em;
 	}
 	.ship-info dd {

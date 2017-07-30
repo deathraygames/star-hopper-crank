@@ -15,7 +15,8 @@ RocketBoots.loadComponents([
 		SPACE_SIZE_Y = 1000,
 		PIXELS_PER_GRID_UNIT = 32,
 		DECONSTRUCT_COLOR = "rgba(200, 50, 0, 0.5)",
-		CONSTRUCT_COLOR = "rgba(0, 200, 50, 0.5)"
+		CONSTRUCT_COLOR = "rgba(0, 200, 50, 0.5)",
+		SYSTEM_EXPLORATION_GOAL = 30
 	;
 
 	var worldOptions = {
@@ -68,6 +69,10 @@ RocketBoots.loadComponents([
 	g.discoverSystem = discoverSystem;
 	g.showMessage = showMessage;
 	g.giveFreeOre = giveFreeOre;
+	g.achievements = {
+		systemsExplored: 0,
+		partTypesUnlocked: {}
+	};
 
 	g.messages = [];
 	g.mousePos = null;
@@ -311,30 +316,35 @@ RocketBoots.loadComponents([
 			world: g.world
 		});
 		//g.ship.addPart("corner", 		{x: -1, y: 1}, 3);
-		g.ship.addPart("structure", 	{x: 0, y: 1}, 0);
+		g.ship.addPart("corner", 		{x: 0, y: 1}, 0);
 		g.ship.addPart("structure", 	{x: 1, y: 1}, 0);
 		g.ship.addPart("corner", 		{x: 2, y: 1}, 0);
+		g.ship.addPart("engine-E", 		{x: 3, y: 1}, 0);
+
 		g.ship.addPart("structure", 	{x: 2, y: 0}, 1);
 		g.ship.addPart("structure", 	{x: 2, y: -1}, 0);
-		g.ship.addPart("corner", 		{x: 2, y: -2}, 1);
+		g.ship.addPart("structure", 	{x: 2, y: -2}, 1);
+
 		g.ship.addPart("cargo-space-E", {x: 1, y: -2}, 0);
 		g.ship.addPart("miner-E", 		{x: 0, y: -2}, 2);
-		g.ship.addPart("corner", 		{x: -1, y: -2}, 2);
-		g.ship.addPart("structure", 	{x: -1, y: -1}, 0);
-		g.ship.addPart("telescope-E", 	{x: -1, y: 0}, 3);
+		//g.ship.addPart("corner", 		{x: -1, y: -2}, 2);
+		g.ship.addPart("telescope-E", 	{x: -1, y: -1}, 3);
+		g.ship.addPart("corner", 		{x: -1, y: 0}, 3);
 
-		g.ship.addPart("engine-E", 		{x: 3, y: 0}, 1);
+		//g.ship.addPart("engine-E", 		{x: 3, y: 0}, 1);
 
-		g.ship.addPart("solar-panels-D", {x: 2, y: 2}, 0);
-		g.ship.addPart("solar-panels-D", {x: 1, y: 2}, 0);
+		//g.ship.addPart("solar-panels-D", {x: 2, y: 2}, 0);
+		//g.ship.addPart("solar-panels-D", {x: 1, y: 2}, 0);
 
 		g.ship.switchMiners(false);
 		g.ship.switchScanners(false);
 		g.ship.switchEngines(false);
 
-		discoverSystem();
-		discoverSystem();
-		discoverSystem();
+		//discoverSystem();
+		//discoverSystem();
+		//discoverSystem();
+
+		setPartsUnlocked();
 	}
 
 	function setupBuildCursors() {
@@ -400,6 +410,18 @@ RocketBoots.loadComponents([
 			$('.travel-info .bar > span').css("width", dPercent + "%");
 			$('.travel-info .rate').html(rate);
 		}
+		{
+			let percent = getPercentage(g.achievements.systemsExplored, SYSTEM_EXPLORATION_GOAL);
+			$('.systems-explored .numbers').html(g.achievements.systemsExplored + ' / ' + SYSTEM_EXPLORATION_GOAL);
+			$('.systems-explored .bar > span').css("width", percent + "%");
+		}
+		{
+			let n = _.size(g.achievements.partTypesUnlocked);
+			let max = _.size(data.partTypes);
+			let percent = getPercentage(n, max);
+			$('.parts-unlocked .numbers').html(n + ' / ' + max);
+			$('.parts-unlocked .bar > span').css("width", percent + "%");
+		}
 	}
 
 	function getRateString(rate) {
@@ -415,7 +437,7 @@ RocketBoots.loadComponents([
 		if (xMax == 0 || typeof x !== "number" || typeof xMax !== "number") {
 			return 0;
 		}
-		return ((x / xMax) * 100);
+		return Math.min(((x / xMax) * 100), 100);
 	}
 	function getMaxBarWidth(max) {
 		const someMax = 1000;
@@ -533,11 +555,10 @@ RocketBoots.loadComponents([
 		if (typeof partType.cost === "number" && ore >= partType.cost) {
 			g.ship.removeOre(partType.cost);
 			g.ship.addPart(partTypeKey, gridPos, rotationIndex);
-
+			setPartsUnlocked();
 		} else {
 			g.showMessage("Cannot afford this. You need more ore.");
 		}
-		
 		
 	}
 
@@ -606,6 +627,7 @@ RocketBoots.loadComponents([
 		g.ship.location = g.ship.targetLocation;
 		g.ship.targetLocation = null;
 		g.showMessage("Arrived at " + g.ship.location.getNameWithType());
+		g.achievements.systemsExplored++;
 	}
 
 	function discoverSystem() {
@@ -613,6 +635,12 @@ RocketBoots.loadComponents([
 		updateNavigation();
 		g.ship.findLocation(newLocation);
 		g.showMessage("Found new system: " + newLocation.name);
+	}
+
+	function setPartsUnlocked() {
+		_.each(g.ship.parts, function(part){
+			g.achievements.partTypesUnlocked[part.partTypeKey] = true;
+		});
 	}
 
 	function showNavigation() {
