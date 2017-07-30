@@ -1,16 +1,21 @@
 (function(){
 
-const PIXELS_PER_GRID_UNIT = 16;
+const PIXELS_PER_GRID_UNIT = 32;
 
 class Location {
 	constructor(options) {
 		let dice = new RocketBoots.Dice();
+		options = options || {};
 		this.name = "System " + RocketBoots.getUniqueId();
 		this.originalDistance = (20 + dice.roll1d(100) + dice.roll1d(100));
 		this.distance = this.originalDistance; 
 		this.solarPower = 1;
 		this.asteroid = null;
-		this.type = dice.pick(["giant sun", "asteroid belt", "dwarf sun"]);
+		if (typeof options.type === "string") {
+			this.type = options.type;
+		} else {
+			this.type = dice.pick(["giant sun", "asteroid belt", "dwarf sun"]);
+		}
 		switch (this.type) {
 			case "giant sun":
 				this.solarPower = 2;
@@ -33,6 +38,13 @@ class Location {
 	isThere() {
 		return (this.distance <= 0);
 	}
+	mineAsteroid(ore) {
+		if (ore > 0 && this.asteroid instanceof Asteroid) {
+			return this.asteroid.mine(ore);
+		} else {
+			return 0;
+		}
+	}
 }
 
 class Starship {
@@ -41,7 +53,7 @@ class Starship {
 		this.world = options.world;
 		this.pixelsPerGridUnit = PIXELS_PER_GRID_UNIT;
 		this.targetLocation = null;
-		this.location = new Location("asteroid belt");
+		this.location = new Location({type: "asteroid belt"});
 		this.foundLocations = [];
 		this.scanProgress = 0;
 		// Rates
@@ -100,6 +112,9 @@ class Starship {
 			max += part.type.storageMax;
 		});
 		return Math.max(Math.min(ore, max), 0);
+	}
+	getOre() {
+		return this.getStorageUsed();
 	}
 	getStorageMax() {
 		let max = 0;
@@ -277,12 +292,8 @@ class Starship {
 		let switchTo = (this.getEnginesOn() > 0) ? false : true;
 		return this.switchEngines(switchTo);
 	}
-	gainOre(ore) {
+	getOreContainers() {
 		let oreContainers = [];
-		let amountEach = 1;
-		if (ore === 0) {
-			return 0;
-		}
 		_.each(this.parts, function(part){
 			if (part.type.storageMax > 0) {
 				let availPercent = part.getAvailableStorage() / part.type.storageMax;
@@ -293,15 +304,26 @@ class Starship {
 				}
 			}
 		});
+		return oreContainers;
+	}
+	gainOre(ore) {
+		let oreContainers = this.getOreContainers();
+		let amountEach = 1;
+		if (ore === 0) { return 0; }
 		_.each(oreContainers, function(part){
 			let oreAdded = part.addOre(amountEach);
 			ore -= oreAdded;
 		});
 		if (oreContainers.length > 0 && ore > 0) {
-			return gainOre(ore);
+			return this.gainOre(ore);
 		} else {
 			return 0;
 		}
+	}
+	removeOre(ore) {
+		let oreContainers = this.getOreContainers();
+		if (ore === 0) { return 0; }
+		// TODO
 	}
 	isScanDone() {
 		const MAX_PROGRESS = 100;
@@ -334,17 +356,33 @@ class Starship {
 			return null
 		}
 	}
+	mine(t) {
+		let ore = (this.oreRate * t); 
+		if (this.location instanceof Location) {
+			ore = this.location.mineAsteroid(ore);			
+			if (ore === 0) {
+				// Nothing to mine
+			} else {
+				this.gainOre(ore);
+			}
+		} else {
+			return null;
+		}
+	}
 	simulate(t) {
 		let ship = this;
 		let energy = 0; // TODO: calculate this for the rate
 		let ore = 0;
+		ship.energyRate = 0;
 		ship.speedRate = 0;
 		ship.scanRate = 0;
+		ship.oreRate = 0;
 		// Gain and distribute energy
 		_.each(this.parts, function(part){
 			if (part.isOn && part.type.energyGain > 0) {
 				let nearParts = ship.getNearestPartsByPart(part);
 				let amountEach = (part.type.energyGain * t) / nearParts.length;
+				ship.energyRate += part.type.energyGain;
 				_.each(nearParts, function(nearPart){
 					nearPart.energy += amountEach;
 				});
@@ -367,16 +405,13 @@ class Starship {
 				let efficiency = 1;
 				let energyNeeded = (t * part.type.energyUse)
 				let energyUsed = part.removeEnergy(energyNeeded);
+				ship.energyRate -= part.type.energyUse;
 				if (energyNeeded > 0 && energyUsed < energyNeeded) {
 					efficiency = energyUsed/energyNeeded;
 				}
 
 				if (part.type.oreGain > 0) {
-					ore += (part.type.oreGain * t * efficiency);
-					ore = ship.location.asteroid.mine(ore);
-					if (ore === 0) {
-						part.switch(false);
-					}
+					ship.oreRate += (part.type.oreGain * efficiency);
 				}
 				if (part.type.scanPower > 0) {
 					ship.scanRate += (part.type.scanPower * efficiency);
@@ -388,8 +423,7 @@ class Starship {
 		});
 		ship.scan(t);
 		ship.travel(t);
-		ship.gainOre(ore * t);
-		
+		ship.mine(t);
 
 		// Redistribute and lose excess energy
 		_.each(this.parts, function(part){			
@@ -426,6 +460,10 @@ class Part {
 		this.ore = 0;
 		this.isOn = true;
 		this.rotation = rotations[rotationIndex];
+		this.animationFrame = null;
+		if (this.type.animations) {
+			this.animationFrame = 0;
+		}
 		/*
 		this.entity = new RocketBoots.Entity({
 			size: {x: options.starship.pixelsPerGridUnit, y: options.starship.pixelsPerGridUnit},
@@ -476,8 +514,19 @@ class Part {
 	switchOff() {
 		this.isOn = false;
 	}
+	incrementAnimation() {
+		this.animationFrame++;
+		if (this.animationFrame > (this.type.animations - 1)) {
+			this.animationFrame = 0;
+		}
+	}
 	getImage() {
 		let imageVariation = (this.isRunning()) ? "on" : "off";
+		/*
+		if (this.animationFrame !== null && imageVariation == "on") {
+			imageVariation += "-" + this.animationFrame;
+		}
+		*/
 		return this.type.images[imageVariation];
 	}
 	loseExcessEnergy() {

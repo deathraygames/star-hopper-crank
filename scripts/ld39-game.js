@@ -13,7 +13,7 @@ RocketBoots.loadComponents([
 
 	const SPACE_SIZE_X = 2000,
 		SPACE_SIZE_Y = 1000,
-		PIXELS_PER_GRID_UNIT = 16,
+		PIXELS_PER_GRID_UNIT = 32,
 		DECONSTRUCT_COLOR = "rgba(200, 50, 0, 0.5)",
 		CONSTRUCT_COLOR = "rgba(0, 200, 50, 0.5)"
 	;
@@ -67,6 +67,7 @@ RocketBoots.loadComponents([
 
 	g.discoverSystem = discoverSystem;
 	g.showMessage = showMessage;
+	g.giveFreeOre = giveFreeOre;
 
 	g.messages = [];
 	g.mousePos = null;
@@ -157,11 +158,7 @@ RocketBoots.loadComponents([
 		var imageMap = {};
 		_.each(data.partTypes, function(partType){
 			_.each(partType.imageNames, function(imageName, imageKey){
-				if (imageName === "core-on" || imageName === "core-off") {
-					imageMap[imageName] = "parts/" + imageName + ".png";
-				} else {
-					imageMap[imageName] = "parts/part_test-" + imageKey + ".png";
-				}
+				imageMap[imageName] = "parts/" + imageName + ".png";
 			});
 		});
 		g.images.load(imageMap, function(){
@@ -270,13 +267,9 @@ RocketBoots.loadComponents([
 		$('button.menu').click(function(){
 			g.state.transition("splash");
 		});
-		$('button.crank').click(function(){
-			g.ship.crankCore();
-		});
+		$('button.crank').click(crankCore);
 		$('button.scanners').click(toggleScanners);
-		$('button.miners').click(function(){
-			g.ship.toggleMiners();
-		});
+		$('button.miners').click(toggleMiners);
 		$('button.engines').click(toggleEngines);
 		$('button.navigation').click(showNavigation);
 		$('button.closeNavigation').click(closeNavigation);
@@ -324,7 +317,7 @@ RocketBoots.loadComponents([
 		g.ship.addPart("structure", 	{x: 2, y: 0}, 1);
 		g.ship.addPart("structure", 	{x: 2, y: -1}, 0);
 		g.ship.addPart("corner", 		{x: 2, y: -2}, 1);
-		g.ship.addPart("structure", 	{x: 1, y: -2}, 0);
+		g.ship.addPart("cargo-space-E", {x: 1, y: -2}, 0);
 		g.ship.addPart("miner-E", 		{x: 0, y: -2}, 2);
 		g.ship.addPart("corner", 		{x: -1, y: -2}, 2);
 		g.ship.addPart("structure", 	{x: -1, y: -1}, 0);
@@ -379,6 +372,7 @@ RocketBoots.loadComponents([
 		$('.energyNumbers').html(e + ' / ' + eMax);
 		$('.energy-info .bar').css("width", getMaxBarWidth(eMax) + "%");
 		$('.energy-info .bar > span').css("width", ePercent + "%");
+		$('.energy-info .rate').html(getRateString(g.ship.energyRate));
 		
 		$('.scanNumbers').html(n + ' / ' + nMax + '%');
 		$('.scan-info .bar').css("width", "100%");
@@ -388,6 +382,7 @@ RocketBoots.loadComponents([
 		$('.storageNumbers').html(s + ' / ' + sMax);
 		$('.storage-info .bar').css("width", getMaxBarWidth(sMax) + "%");
 		$('.storage-info .bar > span').css("width", sPercent + "%");
+		$('.storage-info .rate').html(getRateString(g.ship.oreRate));
 
 		{
 			let numbersHTML;
@@ -471,12 +466,12 @@ RocketBoots.loadComponents([
 
 	function showMessage(m) {
 		let $messages = $('.messages');
-		g.messages.push(m);
-		$messages.html(m).stop().fadeIn(function(){
-			$messages.fadeOut(5000);	
+		// g.messages.push(m);
+		$messages.stop().hide(function(){
+			$messages.html(m).fadeIn(function(){
+				$messages.fadeOut(5000);
+			});
 		});
-		//g.messageTimer = window.timeout(function(){	
-		//});
 	}
 
 	//===========================================BUILD ACTIONS==================
@@ -524,17 +519,35 @@ RocketBoots.loadComponents([
 	function doBuildAction(pos) {
 		if (g.selectedPartTypeKey === null) {
 			let part = g.ship.getNearestPart(pos);
-			if (part.type.cost === null) {
-				g.showMessage("Cannot delete this part.");
-			} else {
-				g.ship.removePart(part);
-				// TODO: provide a rebate
-			}
+			deconstruct(part);
 		} else {
-			let gridPos = g.ship.getNearestEmptyGridPosition(pos);
-			g.ship.addPart(g.selectedPartTypeKey, gridPos, g.selectPartRotationIndex);
+			construct(g.selectedPartTypeKey, g.selectPartRotationIndex, pos);
 		}
 		drawInfo();
+	}
+
+	function construct(partTypeKey, rotationIndex, pos) {
+		let gridPos = g.ship.getNearestEmptyGridPosition(pos);
+		let partType = data.partTypes[partTypeKey];
+		let ore = g.ship.getOre();
+		if (typeof partType.cost === "number" && ore >= partType.cost) {
+			g.ship.removeOre(partType.cost);
+			g.ship.addPart(partTypeKey, gridPos, rotationIndex);
+
+		} else {
+			g.showMessage("Cannot afford this. You need more ore.");
+		}
+		
+		
+	}
+
+	function deconstruct(part) {
+		if (part.type.cost === null) {
+			g.showMessage("Cannot delete this part.");
+		} else {
+			g.ship.removePart(part);
+			// TODO: provide a rebate
+		}		
 	}
 
 	//===========================================SPACE ACTIONS==================
@@ -564,7 +577,7 @@ RocketBoots.loadComponents([
 				g.ship.location = null;
 			}
 		} else {
-			g.showMessage("Engines off");
+			g.showMessage("Engines OFF");
 		}
 	}
 
@@ -574,17 +587,19 @@ RocketBoots.loadComponents([
 		if (g.ship.location instanceof Location) {
 			h += "At " + g.ship.location.getNameWithType() + '<br />';
 		}
-		h += 'Scanners ' + ((scannersOn) ? 'on' : 'off');
+		h += 'Scanners ' + ((scannersOn) ? 'ON' : 'OFF');
 		g.showMessage(h);
 	}
 
 	function toggleMiners() {
 		let h = '';
 		if (g.ship.location instanceof Location) {
-			let scannersOn = g.ship.toggleMiners();
+			let minersOn = g.ship.toggleMiners();
+			h += 'Miner drones ' + ((minersOn) ? 'ON' : 'OFF');
 		} else {
-
+			h = "You're in deep space. You cannot activate miner drones here.";
 		}
+		g.showMessage(h);
 	}
 
 	function arriveAtSystem() {
@@ -603,7 +618,6 @@ RocketBoots.loadComponents([
 	function showNavigation() {
 		updateNavigation();
 		$('.navigation-panel').fadeIn();
-
 	}
 
 	function closeNavigation() {
@@ -613,6 +627,15 @@ RocketBoots.loadComponents([
 	function selectLocationAsTarget(locationIndex) {
 		g.ship.targetLocation = g.ship.foundLocations[locationIndex];
 		g.ship.resetFoundLocations();
+	}
+
+	function giveFreeOre(n) {
+		g.ship.gainOre(n);
+	}
+
+	function crankCore() {
+		g.ship.core.incrementAnimation();
+		g.ship.crankCore();
 	}
 
 	// Junk?

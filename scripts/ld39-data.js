@@ -5,36 +5,42 @@ const partTypes = {
 	"core": {
 		name: "Starship Core",
 		icon: "border_outer",
+		cost: null, // not for sale
 		energyUse: 1,
 		gridSize: {x: 2, y: 2},
 		energyMax: 6,
-		cost: null // not for sale
+		animations: 4
 	},
 	"structure": {
 		name: "Structure Block",
 		icon: "border_all",
-		energyMax: 1
+		cost: 8,
+		energyMax: 1,
 	},
 	"corner": {
 		name: "Corner Structure",
 		icon: "network_cell",
+		cost: 4,
 		energyMax: 1
 	},
 	"battery-E": {
 		name: "Battery Class-E",
 		icon: "battery_charging_full",
+		cost: 20,
 		action: "toggle",
 		energyMax: 10
 	},
 	"battery-D": {
 		name: "Battery Class-D",
 		icon: "battery_charging_full",
+		cost: 200,
 		action: "toggle",
 		energyMax: 30
 	},
 	"solar-panels-E": {
 		name: "Solar Panels E",
 		icon: "flash_on",
+		cost: 20,
 		action: "toggle",
 		energyGain: 1,
 		energyMax: 1
@@ -42,6 +48,7 @@ const partTypes = {
 	"solar-panels-D": {
 		name: "Solar Panels D",
 		icon: "flash_on",
+		cost: 200,
 		action: "toggle",
 		energyGain: 3,
 		energyMax: 3
@@ -49,12 +56,14 @@ const partTypes = {
 	"cargo-space-E": {
 		name: "Small Cargo Space",
 		icon: "archive",
+		cost: 10,
 		storageMax: 10,
 		energyMax: 1
 	},
 	"miner-E": {
 		name: "Miner-Drones E",
 		icon: "terrain",
+		cost: 20,
 		action: "toggle",
 		oreGain: 1,
 		energyUse: 1,
@@ -63,6 +72,7 @@ const partTypes = {
 	"miner-D": {
 		name: "Miner-Drones D",
 		icon: "terrain",
+		cost: 200,
 		action: "toggle",
 		oreGain: 3,
 		energyUse: 2,
@@ -71,6 +81,7 @@ const partTypes = {
 	"telescope-E": {
 		name: "Telescope Class-E",
 		icon: "scanner",
+		cost: 20,
 		action: "toggle",
 		scanPower: 1,
 		energyUse: 1,
@@ -79,6 +90,7 @@ const partTypes = {
 	"telescope-D": {
 		name: "Telescope Class-D",
 		icon: "scanner",
+		cost: 200,
 		action: "toggle",
 		scanPower: 3,
 		energyUse: 2,
@@ -87,6 +99,7 @@ const partTypes = {
 	"engine-E": {
 		name: "Engine Class-E",
 		icon: "brightness_low",
+		cost: 20,
 		action: "toggle",
 		speed: 1,
 		energyUse: 1,
@@ -95,6 +108,7 @@ const partTypes = {
 	"engine-D": {
 		name: "Engine Class-D",
 		icon: "brightness_low",
+		cost: 200,
 		action: "toggle",
 		speed: 3,
 		energyUse: 2,
