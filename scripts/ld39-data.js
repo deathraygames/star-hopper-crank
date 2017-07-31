@@ -6,7 +6,7 @@ const partTypes = {
 		name: "Starship Core",
 		icon: "border_outer",
 		cost: null, // not for sale
-		energyGain: 0.2,
+		energyGain: 0.3,
 		gridSize: {x: 2, y: 2},
 		energyMax: 6,
 		animations: 4
@@ -83,7 +83,7 @@ const partTypes = {
 		icon: "terrain",
 		cost: 20,
 		action: "toggle",
-		oreGain: 0.5,
+		oreGain: 1,
 		energyUse: 2,
 		energyMax: 2
 	},
@@ -92,7 +92,7 @@ const partTypes = {
 		icon: "terrain",
 		cost: 200,
 		action: "toggle",
-		oreGain: 2.5,
+		oreGain: 5,
 		energyUse: 8,
 		energyMax: 8
 	},
