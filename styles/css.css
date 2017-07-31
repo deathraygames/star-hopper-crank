@@ -21,6 +21,13 @@ body {
 	width: 100%;
 }
 
+a {
+	color: inherit;
+}
+a:hover {
+	color: white;
+}
+
 
 .splash {
 	text-align: center;
