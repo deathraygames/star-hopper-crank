@@ -61,7 +61,7 @@ RocketBoots.loadComponents([
 			{"images": "ImageBank"},
 			{"keyboard": "Keyboard"}
 		],
-		version: "ld39-v1.0.0"
+		version: "ld39-v1.0.1"
 	});
 
 	var $version;
@@ -724,7 +724,8 @@ RocketBoots.loadComponents([
 			let minersOn = g.ship.toggleMiners();
 			h += 'Miner drones ' + ((minersOn) ? 'ON' : 'OFF');
 		} else {
-			h = "You're in deep space. You cannot activate miner drones here.";
+			h = "You're in deep space. You cannot activate miner drones here, but you manage to scoop up a tiny bit of space dust.";
+			g.ship.gainOre(0.1);
 		}
 		g.showMessage(h);
 	}

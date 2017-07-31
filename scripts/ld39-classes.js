@@ -327,12 +327,13 @@ class Starship {
 		});
 		return oreContainers;
 	}
-	gainOre(ore,) {
+	gainOre(ore) {
 		let oreContainers = this.getOreContainers();
-		let amountEach = 1;
+		let amountEach = Math.min(1, ore);
 		if (ore <= 0) { return 0; }
 		_.each(oreContainers, function(part){
-			let oreAdded = part.addOre(amountEach);
+			let oreToAdd = Math.min(amountEach, ore);
+			let oreAdded = part.addOre(oreToAdd);
 			ore -= oreAdded;
 		});
 		if (oreContainers.length > 0 && ore > 0) {
@@ -391,9 +392,11 @@ class Starship {
 	mine(t) {
 		let ore = (this.oreRate * t); 
 		if (this.location instanceof Location) {
-			ore = this.location.mineAsteroid(ore);			
+			ore = this.location.mineAsteroid(ore);
 			if (ore === 0) {
-				// Nothing to mine
+				// Need to always allow some amount of ore to be gained
+				// or it is easy to get stuck
+				this.gainOre((ore / 5));
 			} else {
 				this.gainOre(ore);
 			}
