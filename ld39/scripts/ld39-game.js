@@ -61,7 +61,7 @@ RocketBoots.loadComponents([
 			{"images": "ImageBank"},
 			{"keyboard": "Keyboard"}
 		],
-		version: "ld39-v1.0.2"
+		version: "ld39-v1.0.3"
 	});
 
 	var $version;

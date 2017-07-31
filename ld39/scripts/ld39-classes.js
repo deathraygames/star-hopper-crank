@@ -392,13 +392,13 @@ class Starship {
 	mine(t) {
 		let ore = (this.oreRate * t); 
 		if (this.location instanceof Location) {
-			ore = this.location.mineAsteroid(ore);
-			if (ore === 0) {
+			let asteroidOre = this.location.mineAsteroid(ore);
+			if (asteroidOre === 0) {
 				// Need to always allow some amount of ore to be gained
 				// or it is easy to get stuck
 				this.gainOre((ore / 5));
 			} else {
-				this.gainOre(ore);
+				this.gainOre(asteroidOre);
 			}
 		} else {
 			return null;
