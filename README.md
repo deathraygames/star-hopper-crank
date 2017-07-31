@@ -3,6 +3,7 @@
 ## Try it out
 
 * Latest development version: https://deathraygames.github.io/star-hopper-crank/ 
+* Latest stable version (post-LDJAM): http://deathraygames.com/play-online/star-hopper-crank/
 * Original LD39 version: http://deathraygames.com/play-online/star-hopper-crank/ld39/
 * LDJAM page: https://ldjam.com/events/ludum-dare/39/star-hopper-crank
 
