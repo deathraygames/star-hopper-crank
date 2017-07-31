@@ -280,6 +280,9 @@ class Starship {
 	switchEngines(on) {
 		return this.switchByProperty("speed", on);
 	}
+	switchCore(on) {
+		return this.core.switch(on);
+	}
 	toggleMiners() {
 		let switchTo = (this.getMinersOn() > 0) ? false : true;
 		return this.switchMiners(switchTo);
@@ -292,7 +295,25 @@ class Starship {
 		let switchTo = (this.getEnginesOn() > 0) ? false : true;
 		return this.switchEngines(switchTo);
 	}
-	getOreContainers() {
+	toggleCore() {
+		let switchTo = this.core.isOn ? false : true;
+		return this.switchCore(switchTo);
+	}
+	getAllOreContainers() {
+		let oreContainers = [];
+		_.each(this.parts, function(part){
+			if (part.type.storageMax > 0) {
+				let availPercent = part.getAvailableStorage() / part.type.storageMax;
+				if (availPercent < 0.5) {
+					oreContainers.unshift(part);
+				} else {
+					oreContainers.push(part);
+				}
+			}
+		});
+		return oreContainers;
+	}
+	getOreContainers() { // only those with available space
 		let oreContainers = [];
 		_.each(this.parts, function(part){
 			if (part.type.storageMax > 0) {
@@ -306,10 +327,10 @@ class Starship {
 		});
 		return oreContainers;
 	}
-	gainOre(ore) {
+	gainOre(ore,) {
 		let oreContainers = this.getOreContainers();
 		let amountEach = 1;
-		if (ore === 0) { return 0; }
+		if (ore <= 0) { return 0; }
 		_.each(oreContainers, function(part){
 			let oreAdded = part.addOre(amountEach);
 			ore -= oreAdded;
@@ -321,9 +342,20 @@ class Starship {
 		}
 	}
 	removeOre(ore) {
-		let oreContainers = this.getOreContainers();
-		if (ore === 0) { return 0; }
-		// TODO
+		let oreContainers = this.getAllOreContainers();
+		let amountEach = Math.ceil(ore / oreContainers.length);
+		let totalOreRemoved = 0;
+		if (ore <= 0) { return 0; }
+		_.each(oreContainers, function(part){
+			let oreRemoved = part.removeOre(amountEach);
+			totalOreRemoved += oreRemoved;
+			ore -= oreRemoved;
+		});
+		if (oreContainers.length > 0 && ore > 0 && totalOreRemoved > 0) {
+			return this.removeOre(ore);
+		} else {
+			return ore;
+		}
 	}
 	isScanDone() {
 		const MAX_PROGRESS = 100;
@@ -371,8 +403,7 @@ class Starship {
 	}
 	simulate(t) {
 		let ship = this;
-		let energy = 0; // TODO: calculate this for the rate
-		let ore = 0;
+		let energy = 0; 
 		ship.energyRate = 0;
 		ship.speedRate = 0;
 		ship.scanRate = 0;
@@ -454,6 +485,7 @@ class Part {
 		let rotationIndex = options.rotationIndex || 0;
 		this.starship = options.starship;
 		this.partTypeKey = options.partTypeKey;
+		this.isCore = (this.partTypeKey === "core") ? true : false;
 		this.type = data.partTypes[this.partTypeKey];
 		this.gridPos = new RocketBoots.Coords(options.gridPos.x, options.gridPos.y);
 		this.energy = 0;
@@ -497,22 +529,21 @@ class Part {
 		this.ore += ore;
 		return ore;
 	}
-
+	removeOre(ore) {
+		ore = Math.min(this.ore, ore);
+		this.ore -= ore;
+		return ore;
+	}
 	isRunning() {
-		return (this.isOn && this.energy > 0);
+		return (this.isOn && (this.energy > 0 || this.isCore));
 	}
 	toggleSwitch() {
-		if (this.isOn) { return this.switchOff(); }
-		else { return this.switchOn(); }
+		if (this.isOn) { return this.switch(false); }
+		else { return this.switch(true); }
 	}
 	switch(on) {
 		this.isOn = (on) ? true : false;
-	}
-	switchOn() {
-		this.isOn = true;
-	}
-	switchOff() {
-		this.isOn = false;
+		return this.isOn;
 	}
 	incrementAnimation() {
 		this.animationFrame++;
@@ -522,12 +553,12 @@ class Part {
 	}
 	getImage() {
 		let imageVariation = (this.isRunning()) ? "on" : "off";
-		/*
+		let arr = this.type.images[imageVariation];
+		let image = arr[0];
 		if (this.animationFrame !== null && imageVariation == "on") {
-			imageVariation += "-" + this.animationFrame;
+			image = arr[(this.animationFrame+1)];
 		}
-		*/
-		return this.type.images[imageVariation];
+		return image;
 	}
 	loseExcessEnergy() {
 		this.energy = Math.min(this.energy, this.type.energyMax);

@@ -1,10 +1,11 @@
 body {
 	background-color: #000;
-	color: rgba(150, 250, 250, 0.75);
+	color: rgba(150, 219, 250, 0.75);
 	font-family: 'Ubuntu', sans-serif;
 	padding: 0;
 	margin: 0;
 	transition: all 1s;
+	font-size: 18px;
 }
 	body.state-build {
 		background-color: #001133; /* R: 0 G: 17 B: 51 */
@@ -12,6 +13,7 @@ body {
 
 #stage {
 	position: absolute;
+	display: none;
 	z-index: 1;
 	top: 0;
 	left: 0;
@@ -23,7 +25,6 @@ body {
 .splash {
 	text-align: center;
 	padding: 4em 0;
-	font-size: 10px;
 }
 	.splash h1 {
 		font-size: 400%;
@@ -31,12 +32,24 @@ body {
 	}
 	.splash .subtitle {
 		display: block;
-		font-size: 32%;
+		font-size: 120%;
+		color: #854242;
+	}
+	.instructions {
+		max-width: 25em;
+		margin: 3em auto;
+		line-height: 1.5em;
+	}
+	.credits {
+		margin: 3em auto;
+		opacity: 0.8;
+		font-size: 90%;
+		max-width: 25em;
 	}
 
 .controls {
 	position: fixed;
-	bottom: 2%;
+	bottom: 5%;
 	width: 100%;
 	padding: 0.5em 0;
 	text-align: center;
@@ -48,17 +61,18 @@ button {
 	padding: 1em;
 	min-width: 2em;
 	background: rgba(0,0,0,0.5);
-	border: solid 1px rgba(150, 250, 250, 0.1);
-	color: rgba(150, 250, 250, 0.5);
+	border: solid 1px rgba(150, 219, 250, 0.1);
+	color: rgba(150, 219, 250, 0.5);
 	cursor: pointer;
 	font-family: inherit;
+	font-size: inherit;
 	text-align: center;
 	outline: none;
 	transition: all 0.2s;
 }
 	button:hover {
-		border-color: rgba(150, 250, 250, 0.5);
-		color: rgba(150, 250, 250, 1);		
+		border-color: rgba(150, 219, 250, 0.5);
+		color: rgba(150, 219, 250, 1);		
 	}
 	button:active {
 		border-color: #ff0;
@@ -89,7 +103,7 @@ button.full-icon .material-icons,
 }
 
 button.build {
-	float: right;
+	/* float: right; */
 }
 
 .ship-info {
@@ -108,14 +122,24 @@ button.build {
 	.ship-info dd {
 		display: inline-block;
 		margin: 0;
-		padding: 0;
-		min-width: 8em;
 	}
 
+	.numbers {
+		text-align: right;
+		padding-right: 1em;
+		min-width: 6em;
+	}
 
-.travel-info .bar-data,
-.scan-info .bar-data {
-	width: 50%;
+.bar-data {
+	width: 30%;
+	min-width: 2em;
+}
+
+.ship-info button {
+	float: right;
+	clear: right;
+	padding: 0.1em 1em;
+	min-width: 9em;
 }
 
 
@@ -124,8 +148,8 @@ button.build {
 	position: relative;
 	width: 100%;
 	height: 0.25em;
-	background-color: rgba(150, 250, 250, 0.2);
-	border-right: solid 1px rgba(150, 250, 250, 0.3);
+	background-color: rgba(150, 219, 250, 0.2);
+	border-right: solid 1px rgba(150, 219, 250, 0.3);
 }
 	.bar > span {
 		display: block;
@@ -133,7 +157,7 @@ button.build {
 		top: 0; left: 0;
 		height: inherit;
 		width: 0%;
-		background-color: rgba(150, 250, 250, 0.5);
+		background-color: rgba(150, 219, 250, 0.5);
 		transition: all 0.2s;
 	}
 	/*
@@ -148,19 +172,21 @@ button.build {
 	}
 	*/
 
+
+
 .select-list {
 	display: block;
 	padding: 0; margin: 0;
 	text-align: left;
 	list-style: none;
-	border-bottom: solid 1px rgba(150, 250, 250, 0.3);
+	border-bottom: solid 1px rgba(150, 219, 250, 0.3);
 }
 	.select-list > li {
 		display: block;
 		padding: 1em;
 		margin: 0;
 		cursor: pointer;
-		border: solid 1px rgba(150, 250, 250, 0.3);
+		border: solid 1px rgba(150, 219, 250, 0.3);
 		border-bottom: 0;
 	}
 		.select-list > li:hover {
@@ -173,7 +199,7 @@ button.build {
 .part-selection {
 	display: none;
 	position: fixed; z-index: 4;
-	top: 15%; left: 0;
+	top: 0; left: 0;
 	bottom: 0;
 	width: 100%;
 	text-align: center;
@@ -183,12 +209,25 @@ button.build {
 .part-list {
 	display: block;
 	max-width: 19em;
-	margin: 2% auto;
+	margin: 2% auto 10% auto;
 }
+	.part-list > li {
+		position: relative;
+	}
 		.part-list .cost {
 			float: right;
 		}
-
+	.details {
+		display: none;
+		position: absolute;
+		left: 100%; top: 0;
+		width: 8em;
+		padding: 0.5em;
+		border: solid 1px rgba(150, 219, 250, 0.3);
+	}
+	.part-list > li:hover .details {
+		display: block;
+	}
 
 
 .navigation-panel {
@@ -208,7 +247,7 @@ button.build {
 	}
 
 		.found-locations-list > li:hover {
-			background-color: rgba(150, 250, 250, 0.1);
+			background-color: rgba(150, 219, 250, 0.1);
 		}
 
 	.closeNavigation {
@@ -218,7 +257,7 @@ button.build {
 .zero {
 	opacity: 0.6;
 	padding: 1em;
-	border: dashed 1px rgba(150, 250, 250, 0.3);
+	border: dashed 1px rgba(150, 219, 250, 0.3);
 }
 
 .messages {
@@ -227,4 +266,8 @@ button.build {
 	margin-left: -10em;
 	width: 20em;
 	text-align: center;
+}
+
+.bad {
+	color: rgba(250, 150, 150, 0.5);
 }

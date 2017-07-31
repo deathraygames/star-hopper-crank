@@ -6,7 +6,7 @@ const partTypes = {
 		name: "Starship Core",
 		icon: "border_outer",
 		cost: null, // not for sale
-		energyUse: 1,
+		energyGain: 0.2,
 		gridSize: {x: 2, y: 2},
 		energyMax: 6,
 		animations: 4
@@ -17,8 +17,26 @@ const partTypes = {
 		cost: 8,
 		energyMax: 1,
 	},
-	"corner": {
-		name: "Corner Structure",
+	"corner-1": {
+		name: "Corner Structure (1)",
+		icon: "network_cell",
+		cost: 4,
+		energyMax: 1
+	},
+	"corner-2": {
+		name: "Corner Structure (2)",
+		icon: "network_cell",
+		cost: 4,
+		energyMax: 1
+	},
+	"corner-3": {
+		name: "Corner Structure (3)",
+		icon: "network_cell",
+		cost: 4,
+		energyMax: 1
+	},
+	"corner-4": {
+		name: "Corner Structure (4)",
 		icon: "network_cell",
 		cost: 4,
 		energyMax: 1
@@ -48,7 +66,7 @@ const partTypes = {
 	"solar-panels-D": {
 		name: "Solar Panels D",
 		icon: "flash_on",
-		cost: 200,
+		cost: 60,
 		action: "toggle",
 		energyGain: 3,
 		energyMax: 3
@@ -65,26 +83,26 @@ const partTypes = {
 		icon: "terrain",
 		cost: 20,
 		action: "toggle",
-		oreGain: 1,
-		energyUse: 1,
-		energyMax: 1
+		oreGain: 0.5,
+		energyUse: 2,
+		energyMax: 2
 	},
 	"miner-D": {
 		name: "Miner-Drones D",
 		icon: "terrain",
 		cost: 200,
 		action: "toggle",
-		oreGain: 3,
-		energyUse: 2,
-		energyMax: 2
+		oreGain: 2.5,
+		energyUse: 8,
+		energyMax: 8
 	},
 	"telescope-E": {
 		name: "Telescope Class-E",
 		icon: "scanner",
-		cost: 20,
+		cost: 12,
 		action: "toggle",
-		scanPower: 1,
-		energyUse: 1,
+		scanPower: 0.5,
+		energyUse: 0.2,
 		energyMax: 1
 	},
 	"telescope-D": {
@@ -110,8 +128,8 @@ const partTypes = {
 		icon: "brightness_low",
 		cost: 200,
 		action: "toggle",
-		speed: 3,
-		energyUse: 2,
+		speed: 5,
+		energyUse: 4,
 		energyMax: 4
 	}
 };
@@ -132,12 +150,15 @@ const defaultPartType = {
 _.each(partTypes, function(partType, partTypeKey){
 	_.defaults(partType, defaultPartType);
 	partType.imageNames = {
-		"on": partTypeKey + "-on",
-		"off": partTypeKey + "-off"
+		"on": [partTypeKey + "-on"],
+		"off": [partTypeKey + "-off"]
 	};
+	for (var i = 0; i < partType.animations; i++) {
+		partType.imageNames.on.push(partTypeKey + "-on-" + i);
+	}
 	partType.images = { // These will be loaded during setup
-		"on": null,
-		"off": null
+		"on": [null],
+		"off": [null]
 	}
 });
 

@@ -22,7 +22,7 @@ RocketBoots.loadComponents([
 	var worldOptions = {
 		name: "Space",
 		isBounded: true,
-		entityGroups: ["stars", "ships", "ui"],
+		entityGroups: ["stars", "dust", "ships", "ui"],
 		size: {x: SPACE_SIZE_X, y: SPACE_SIZE_Y}
 	};
 	var stageOptions = {
@@ -61,7 +61,7 @@ RocketBoots.loadComponents([
 			{"images": "ImageBank"},
 			{"keyboard": "Keyboard"}
 		],
-		version: "ld39-v0.0.0"
+		version: "ld39-v1.0.0"
 	});
 
 	var $version;
@@ -98,7 +98,8 @@ RocketBoots.loadComponents([
 
 	function startSplashState() {
 		$('.splash').show();
-		g.state.transition("space");
+		$('#stage').hide();
+		//g.state.transition("space");
 	}
 	function endSplashState() {
 		$('.splash').hide();
@@ -107,6 +108,10 @@ RocketBoots.loadComponents([
 	function startSpaceState() {
 		$('.space-controls').fadeIn();
 		$('.ship-info').fadeIn();
+		$('#stage').show();
+		g.world.entities.stars.forEach(function(starEnt){
+			starEnt.isVisible = true;
+		});
 		g.loop.start();
 		drawAll();
 	}
@@ -114,12 +119,17 @@ RocketBoots.loadComponents([
 	function endSpaceState() {
 		$('.space-controls').hide();
 		$('.ship-info').hide();
+		$('#stage').hide();
+		g.world.entities.stars.forEach(function(starEnt){
+			starEnt.isVisible = false;
+		});
 		g.loop.stop();
 	}
 
 	function startBuildState() {
 		$('.build-controls').fadeIn();
 		$('.ship-info').fadeIn();
+		$('#stage').show();
 		g.layer.worldGridScale = PIXELS_PER_GRID_UNIT;
 		g.buildCursor.isVisible = true;
 		g.buildPlacement.isVisible = true;
@@ -129,6 +139,7 @@ RocketBoots.loadComponents([
 	function endBuildState() {
 		$('.build-controls').hide();
 		$('.ship-info').hide();
+		$('#stage').hide();
 		g.layer.worldGridScale = 0;
 		g.buildCursor.isVisible = false;
 		g.buildPlacement.isVisible = false;
@@ -152,24 +163,30 @@ RocketBoots.loadComponents([
 		setupDOM();
 		setupEvents();
 		setupLoops();
+		setupStars();
 		setupShip();
 		setupImages(callback);
 		setupBuildCursors();
-		selectRemovePart();
-		//selectPart("structure");
+		//selectRemovePart();
+		selectPart("structure");
 	}
 
 	function setupImages(callback) {
 		var imageMap = {};
 		_.each(data.partTypes, function(partType){
-			_.each(partType.imageNames, function(imageName, imageKey){
-				imageMap[imageName] = "parts/" + imageName + ".png";
+			_.each(partType.imageNames, function(imageNameArr, imageKey){
+				_.each(imageNameArr, function(imageName){
+					imageMap[imageName] = "parts/" + imageName + ".png";
+				});
 			});
 		});
 		g.images.load(imageMap, function(){
 			_.each(data.partTypes, function(partType){
-				_.each(partType.imageNames, function(imageName, imageKey){
-					partType.images[imageKey] = g.images.get(imageName);
+				_.each(partType.imageNames, function(imageNameArr, imageKey){
+					partType.images[imageKey] = [];
+					_.each(imageNameArr, function(imageName){
+						partType.images[imageKey].push(g.images.get(imageName));
+					});
 				});
 			});
 			callback();
@@ -202,8 +219,14 @@ RocketBoots.loadComponents([
 						+ '<i class="material-icons">' + partType.icon + '</i> '
 						+ '<span class="name">' + partType.name + '</span>'
 						+ '<span class="cost">' + partType.cost + '</span>'
-					+ '</li>'
+						+ '<div class="details">'
 				);
+				for (let p in partType) {
+					if (partType[p] && typeof partType[p] === "number") {
+						partListHTML += '<div>' + p + ': ' + partType[p] + '</div>';
+					}
+				}
+				partListHTML += '</div></li>';
 			}
 		});
 		$('.part-list').html(partListHTML);
@@ -268,11 +291,14 @@ RocketBoots.loadComponents([
 		});
 
 		// Button clicks
+		$('button.space').click(function(){
+			g.state.transition("space");
+		});
 		$('button.build').click(toggleBuildState);
 		$('button.menu').click(function(){
 			g.state.transition("splash");
 		});
-		$('button.crank').click(crankCore);
+		$('button.crank').click(toggleCore);
 		$('button.scanners').click(toggleScanners);
 		$('button.miners').click(toggleMiners);
 		$('button.engines').click(toggleEngines);
@@ -316,20 +342,20 @@ RocketBoots.loadComponents([
 			world: g.world
 		});
 		//g.ship.addPart("corner", 		{x: -1, y: 1}, 3);
-		g.ship.addPart("corner", 		{x: 0, y: 1}, 0);
+		g.ship.addPart("corner-1", 		{x: 0, y: 1}, 0);
 		g.ship.addPart("structure", 	{x: 1, y: 1}, 0);
-		g.ship.addPart("corner", 		{x: 2, y: 1}, 0);
-		g.ship.addPart("engine-E", 		{x: 3, y: 1}, 0);
+		g.ship.addPart("corner-2", 		{x: 2, y: 1}, 0);
+		g.ship.addPart("engine-E", 		{x: 3, y: 0}, 0);
 
 		g.ship.addPart("structure", 	{x: 2, y: 0}, 1);
 		g.ship.addPart("structure", 	{x: 2, y: -1}, 0);
-		g.ship.addPart("structure", 	{x: 2, y: -2}, 1);
+		g.ship.addPart("corner-3", 	{x: 2, y: -2}, 1);
 
 		g.ship.addPart("cargo-space-E", {x: 1, y: -2}, 0);
 		g.ship.addPart("miner-E", 		{x: 0, y: -2}, 2);
 		//g.ship.addPart("corner", 		{x: -1, y: -2}, 2);
 		g.ship.addPart("telescope-E", 	{x: -1, y: -1}, 3);
-		g.ship.addPart("corner", 		{x: -1, y: 0}, 3);
+		g.ship.addPart("corner-1", 		{x: -1, y: 0}, 3);
 
 		//g.ship.addPart("engine-E", 		{x: 3, y: 0}, 1);
 
@@ -339,6 +365,7 @@ RocketBoots.loadComponents([
 		g.ship.switchMiners(false);
 		g.ship.switchScanners(false);
 		g.ship.switchEngines(false);
+		g.ship.switchCore(false);
 
 		//discoverSystem();
 		//discoverSystem();
@@ -362,6 +389,42 @@ RocketBoots.loadComponents([
 		g.world.putIn(g.buildPlacement, ["ui"]);		
 	}
 
+	function setupStars() {
+		const STAR_NUM = 200;
+		for (var i = 0; i < STAR_NUM; i++) {
+			let opacity = g.dice.random();
+			let star = new RocketBoots.Entity({
+				draw: "circle",
+				radius: 1,
+				size: {x: 1, y: 1},
+				pos: {
+					x: g.dice.getRandomAround(SPACE_SIZE_X), 
+					y: g.dice.getRandomAround(SPACE_SIZE_Y)
+				},
+				color: "rgba(255, 255, 255, " + opacity + ")",
+				isPhysical: false,
+				world: g.world
+			});
+			g.world.putIn(star, ["stars"]);
+		}
+		for (var i = 0; i < STAR_NUM; i++) {
+			let opacity = g.dice.random() / 2;
+			let star = new RocketBoots.Entity({
+				draw: "circle",
+				radius: 2,
+				size: {x: 2, y: 2},
+				pos: {
+					x: g.dice.getRandomAround(SPACE_SIZE_X), 
+					y: g.dice.getRandomAround(SPACE_SIZE_Y)
+				},
+				color: "rgba(255, 255, 255, " + opacity + ")",
+				isPhysical: false,
+				world: g.world
+			});
+			g.world.putIn(star, ["dust"]);
+		}
+	}
+
 	//===========================================DRAW===========================
 
 	function drawAll() {
@@ -379,17 +442,22 @@ RocketBoots.loadComponents([
 		let sMax = g.ship.getStorageMax();
 		let sPercent = getPercentage(s, sMax);
 
-		$('.energyNumbers').html(e + ' / ' + eMax);
+		$('.energyNumbers').html(getNumberString(e) + ' / ' + eMax);
+		if (e <= 0) {
+			$('.energyNumbers').addClass("bad");
+		} else {
+			$('.energyNumbers').removeClass("bad");
+		}
 		$('.energy-info .bar').css("width", getMaxBarWidth(eMax) + "%");
 		$('.energy-info .bar > span').css("width", ePercent + "%");
 		$('.energy-info .rate').html(getRateString(g.ship.energyRate));
 		
-		$('.scanNumbers').html(n + ' / ' + nMax + '%');
+		$('.scanNumbers').html(getNumberString(n) + ' / ' + nMax + '%');
 		$('.scan-info .bar').css("width", "100%");
 		$('.scan-info .bar > span').css("width", nPercent + "%");
 		$('.scan-info .rate').html(getRateString(g.ship.scanRate));
 		
-		$('.storageNumbers').html(s + ' / ' + sMax);
+		$('.storageNumbers').html(getNumberString(s) + ' / ' + sMax);
 		$('.storage-info .bar').css("width", getMaxBarWidth(sMax) + "%");
 		$('.storage-info .bar > span').css("width", sPercent + "%");
 		$('.storage-info .rate').html(getRateString(g.ship.oreRate));
@@ -402,7 +470,7 @@ RocketBoots.loadComponents([
 			let dPercent = getPercentage(traveled, dMax);
 			let rate = getRateString(g.ship.speedRate);
 			if (g.ship.hasTargetLocation()) {
-				numbersHTML = d + " / " + dMax;
+				numbersHTML = getNumberString(d) + " / " + dMax;
 			} else {
 				numbersHTML = "--";
 			}
@@ -411,8 +479,9 @@ RocketBoots.loadComponents([
 			$('.travel-info .rate').html(rate);
 		}
 		{
-			let percent = getPercentage(g.achievements.systemsExplored, SYSTEM_EXPLORATION_GOAL);
-			$('.systems-explored .numbers').html(g.achievements.systemsExplored + ' / ' + SYSTEM_EXPLORATION_GOAL);
+			let n = g.achievements.systemsExplored;
+			let percent = getPercentage(n, SYSTEM_EXPLORATION_GOAL);
+			$('.systems-explored .numbers').html(getNumberString(n) + ' / ' + SYSTEM_EXPLORATION_GOAL);
 			$('.systems-explored .bar > span').css("width", percent + "%");
 		}
 		{
@@ -424,10 +493,15 @@ RocketBoots.loadComponents([
 		}
 	}
 
+	function getNumberString(n) {
+		return (Math.floor( (n * 100) ) / 100);
+	}
+
 	function getRateString(rate) {
 		if (rate === 0) {
 			rate = '';
 		} else if (rate > 0) {
+			rate = getNumberString(rate);
 			rate = '+' + rate;
 		}
 		return rate;
@@ -503,7 +577,7 @@ RocketBoots.loadComponents([
 		if (typeof part === "object") {
 			g.selectedPartTypeKey = partTypeKey;
 			$('.selected-part-name').html(part.name);
-			g.buildCursor.image = part.images.on;
+			g.buildCursor.image = part.images.on[0];
 			g.buildCursor.draw = {};
 			g.buildPlacement.color = CONSTRUCT_COLOR;
 			
@@ -553,7 +627,10 @@ RocketBoots.loadComponents([
 		let partType = data.partTypes[partTypeKey];
 		let ore = g.ship.getOre();
 		if (typeof partType.cost === "number" && ore >= partType.cost) {
-			g.ship.removeOre(partType.cost);
+			let notPaid = g.ship.removeOre(partType.cost);
+			if (notPaid > 0) {
+				g.showMessage("Something went wrong.");
+			}
 			g.ship.addPart(partTypeKey, gridPos, rotationIndex);
 			setPartsUnlocked();
 		} else {
@@ -566,8 +643,9 @@ RocketBoots.loadComponents([
 		if (part.type.cost === null) {
 			g.showMessage("Cannot delete this part.");
 		} else {
+			let rebateOre = part.type.cost * 0.5;
 			g.ship.removePart(part);
-			// TODO: provide a rebate
+			g.ship.gainOre(rebateOre);
 		}		
 	}
 
@@ -584,6 +662,34 @@ RocketBoots.loadComponents([
 			arriveAtSystem();
 			g.ship.switchEngines(false);
 		}
+		g.ship.core.incrementAnimation();
+
+		moveStars();
+	}
+
+	function moveStars() {
+		let starMoveX = Math.max((g.ship.speedRate * 2), 1);
+		let starMoveY = (g.ship.speedRate > 0) ? 0 : 0.5;
+		let spaceSize2 = {
+			x: SPACE_SIZE_X * 2, y: SPACE_SIZE_Y * 2
+		};
+		let spaceSizeNeg = {
+			x: SPACE_SIZE_X * -1, y: SPACE_SIZE_Y * -1
+		};
+		g.world.loopOverEntitiesByType("dust", function(i, ent){
+			ent.pos.x += starMoveX;
+			ent.pos.y += starMoveY;
+			if (ent.pos.x > SPACE_SIZE_X) {
+				ent.pos.x -= spaceSize2.x;
+			} else if (ent.pos.x < spaceSizeNeg.x) {
+				ent.pos.x += spaceSize2.x;
+			}
+			if (ent.pos.y > SPACE_SIZE_Y) {
+				ent.pos.y -= spaceSize2.y;
+			} else if (ent.pos.y < spaceSizeNeg.y) {
+				ent.pos.y += spaceSize2.y;
+			}
+		});
 	}
 
 	function toggleEngines() {
@@ -591,7 +697,7 @@ RocketBoots.loadComponents([
 		enginesOn = g.ship.toggleEngines();
 		if (enginesOn) {
 			if (g.ship.targetLocation === null) {
-				g.showMessage("No target location. Where are you going?");
+				g.showMessage("Where are you going? You need to set a target location (Navigation).");
 			} else {
 				g.showMessage("You fly into space towards " + g.ship.targetLocation.getNameWithType());
 				g.ship.switchMiners(false);
@@ -621,6 +727,11 @@ RocketBoots.loadComponents([
 			h = "You're in deep space. You cannot activate miner drones here.";
 		}
 		g.showMessage(h);
+	}
+
+	function toggleCore() {
+		let on = g.ship.toggleCore();
+		g.showMessage("Crank " + ((on) ? "ON" : "OFF"));
 	}
 
 	function arriveAtSystem() {
@@ -659,11 +770,6 @@ RocketBoots.loadComponents([
 
 	function giveFreeOre(n) {
 		g.ship.gainOre(n);
-	}
-
-	function crankCore() {
-		g.ship.core.incrementAnimation();
-		g.ship.crankCore();
 	}
 
 	// Junk?

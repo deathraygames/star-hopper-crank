@@ -15,10 +15,27 @@
 
 <section class="splash">
 	<h1>
-		Star-Hopper
+		Star Hopper:
 		<span class="subtitle">Crank</span>
 	</h1>
 	<span class="version">-</span>
+	<div class="instructions">
+		<p>
+			You are a galactic explorer, deep in uncharted space aboard a new, experimental, modular-designed "Crank" ship.
+			Your goal is to explore the galaxy, mine asteroids for resources,
+			and build new parts onto your ship. (Gameplay: Mine ore, scan for systems, travel to new systems; keep your energy up.)
+		</p>
+		<p>
+			Power may be sparse at first, but luckily your ship comes equipped
+			with a handy, manual crank for generating energy.
+		</p>
+	</div>
+	<button type="button" class="space">Enter Deep Space</button>
+	<div class="credits">
+		<p>
+			Created in 48 hours for Ludum Dare 39, with the theme of "Running out of power".
+		</p>
+	</div>
 </section>
 
 
@@ -43,6 +60,9 @@
 				<span></span>
 			</span>
 		</dd>
+		<button type="button" class="navigation">
+			<i class="material-icons">gps_fixed</i> Navigation
+		</button>
 	</div>
 	<div class="travel-info">
 		<dt><i class="material-icons">change_history</i> Travel</dt>
@@ -53,42 +73,54 @@
 			</span>
 		</dd>
 		<dd class="rate"></dd>
+		<button type="button" class="engines">
+			<i class="material-icons">brightness_low</i> Engines
+		</button>
 	</div>
 	<div class="scan-info">
 		<dt><i class="material-icons">wifi_tethering</i> Scan</dt>
-		<dd class="scanNumbers"></dd>
+		<dd class="scanNumbers numbers"></dd>
 		<dd class="bar-data">
 			<span class="bar">
 				<span></span>
 			</span>
 		</dd>
 		<dd class="rate"></dd>
+		<button type="button" class="scanners">
+			<i class="material-icons">wifi_tethering</i> Scanners
+		</button>
 	</div>
 	<div class="energy-info">
 		<dt><i class="material-icons">flash_on</i> Energy</dt>
-		<dd class="energyNumbers"></dd>
+		<dd class="energyNumbers numbers"></dd>
 		<dd class="bar-data">
 			<span class="bar">
 				<span></span>
 			</span>
 		</dd>
 		<dd class="rate"></dd>
+		<button type="button" class="crank">
+			<i class="material-icons">flash_on</i> Crank
+		</button>
 	</div>
 	<div class="storage-info">
 		<dt><i class="material-icons">terrain</i> Ore</dt>
-		<dd class="storageNumbers"></dd>
+		<dd class="storageNumbers numbers"></dd>
 		<dd class="bar-data">
 			<span class="bar">
 				<span></span>
 			</span>
 		</dd>
 		<dd class="rate"></dd>
+		<button type="button" class="miners">
+			<i class="material-icons">terrain</i> Miners
+		</button>
 	</div>
 </dl>
 
 <nav class="controls space-controls">
-	<button type="button" class="full-icon menu">
-		<i class="material-icons">menu</i>
+	<button type="button" class="crank">
+		<i class="material-icons">flash_on</i> Crank
 	</button>
 	<!--
 	<button type="button" class="full-icon zoomIn left-paired">
@@ -124,8 +156,8 @@
 	<button type="button" class="build">
 		<i class="material-icons">settings</i> Build
 	</button>
-	<button type="button" class="crank">
-		<i class="material-icons">flash_on</i> Crank
+	<button type="button" class="full-icon menu">
+		<i class="material-icons">menu</i>
 	</button>
 </nav>
 <nav class="controls build-controls">
@@ -144,14 +176,19 @@
 	<button type="button" class="full-icon deletePart">
 		<i class="material-icons">delete_forever</i>
 	</button>
+	<!--
 	<button type="button" class="full-icon rotateLeft left-paired">
 		<i class="material-icons">rotate_left</i>
 	</button>
 	<button type="button" class="full-icon rotateRight right-paired">
 		<i class="material-icons">rotate_right</i> Rotate
 	</button>
+	-->
 	<button type="button" class="build">
 		<i class="material-icons">settings</i> Done Building
+	</button>
+	<button type="button" class="full-icon menu">
+		<i class="material-icons">menu</i>
 	</button>
 </nav>
 
