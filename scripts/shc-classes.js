@@ -28,6 +28,12 @@ class Location {
 				break;
 		}
 	}
+	hasAsteroid() {
+		return (this.asteroid instanceof Asteroid) ? true : false;
+	}
+	getAsteroids() {
+		return (this.hasAsteroid()) ? this.asteroid.mass : 0;
+	}
 	getNameWithType() {
 		return this.name + ' (' + this.type + ')';
 	}
@@ -39,7 +45,7 @@ class Location {
 		return (this.distance <= 0);
 	}
 	mineAsteroid(ore) {
-		if (ore > 0 && this.asteroid instanceof Asteroid) {
+		if (ore > 0 && this.hasAsteroid()) {
 			return this.asteroid.mine(ore);
 		} else {
 			return 0;
@@ -453,6 +459,7 @@ class Starship {
 				if (part.type.speed > 0) {
 					ship.speedRate += (part.type.speed * efficiency);
 				}
+				part.lastEfficiency = efficiency;
 			}
 		});
 		ship.scan(t);
@@ -496,6 +503,7 @@ class Part {
 		this.isOn = (this.type.energyUse) ? false : true;
 		this.rotation = rotations[rotationIndex];
 		this.animationFrame = null;
+		this.lastEfficiency = 0;
 		if (this.type.animations) {
 			this.animationFrame = 0;
 		}
@@ -570,7 +578,8 @@ class Part {
 
 class Asteroid {
 	constructor(options) {
-		this.mass = 1000; // TODO: random
+		let dice = new RocketBoots.Dice();
+		this.mass = dice.roll1d(6) * 500; 
 	}
 	mine(amount) {
 		amount = Math.min(amount, this.mass);

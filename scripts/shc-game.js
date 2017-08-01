@@ -16,7 +16,8 @@ RocketBoots.loadComponents([
 		PIXELS_PER_GRID_UNIT = 32,
 		DECONSTRUCT_COLOR = "rgba(200, 50, 0, 0.5)",
 		CONSTRUCT_COLOR = "rgba(0, 200, 50, 0.5)",
-		SYSTEM_EXPLORATION_GOAL = 30
+		SYSTEM_EXPLORATION_GOAL = 30,
+		MASS_PER_ASTEROID_FUDGE = 20
 	;
 
 	var worldOptions = {
@@ -61,7 +62,7 @@ RocketBoots.loadComponents([
 			{"images": "ImageBank"},
 			{"keyboard": "Keyboard"}
 		],
-		version: "v1.0.3"
+		version: "v1.0.4"
 	});
 
 	var $version;
@@ -78,6 +79,7 @@ RocketBoots.loadComponents([
 	g.mousePos = null;
 	g.selectedPartTypeKey = null;
 	g.selectPartRotationIndex = 0;
+	g.selectedPart = null;
 	g.buildCursor = null;
 	g.buildPlacement = null;
 
@@ -107,7 +109,7 @@ RocketBoots.loadComponents([
 
 	function startSpaceState() {
 		$('.space-controls').fadeIn();
-		$('.ship-info').fadeIn();
+		$('.info').fadeIn();
 		$('#stage').show();
 		g.world.entities.stars.forEach(function(starEnt){
 			starEnt.isVisible = true;
@@ -118,7 +120,7 @@ RocketBoots.loadComponents([
 
 	function endSpaceState() {
 		$('.space-controls').hide();
-		$('.ship-info').hide();
+		$('.info').hide();
 		$('#stage').hide();
 		g.world.entities.stars.forEach(function(starEnt){
 			starEnt.isVisible = false;
@@ -128,8 +130,9 @@ RocketBoots.loadComponents([
 
 	function startBuildState() {
 		$('.build-controls').fadeIn();
-		$('.ship-info').fadeIn();
+		$('.info').fadeIn();
 		$('#stage').show();
+		$('.circle').stop().fadeOut();
 		g.layer.worldGridScale = PIXELS_PER_GRID_UNIT;
 		g.buildCursor.isVisible = true;
 		g.buildPlacement.isVisible = true;
@@ -138,8 +141,9 @@ RocketBoots.loadComponents([
 
 	function endBuildState() {
 		$('.build-controls').hide();
-		$('.ship-info').hide();
+		$('.info').hide();
 		$('#stage').hide();
+		$('.circle').fadeIn();
 		g.layer.worldGridScale = 0;
 		g.buildCursor.isVisible = false;
 		g.buildPlacement.isVisible = false;
@@ -168,7 +172,7 @@ RocketBoots.loadComponents([
 		setupImages(callback);
 		setupBuildCursors();
 		//selectRemovePart();
-		selectPart("structure");
+		selectBuildPart("structure");
 	}
 
 	function setupImages(callback) {
@@ -208,14 +212,12 @@ RocketBoots.loadComponents([
 
 	function setupDOM() {
 		let partListHTML = '';
-		// Write version
-		$version = $('.version');
-		$version.html(g.version);
+		let partList = _.sortBy(data.partTypes, ["cost", "name"]);
 		// Write part list
-		_.each(data.partTypes, function(partType, partTypeKey){
+		_.each(partList, function(partType){
 			if (partType.cost !== null) {
 				partListHTML += (
-					'<li data-parttypekey="' + partTypeKey + '">'
+					'<li data-parttypekey="' + partType.key + '">'
 						+ '<i class="material-icons">' + partType.icon + '</i> '
 						+ '<span class="name">' + partType.name + '</span>'
 						+ '<span class="cost">' + partType.cost + '</span>'
@@ -230,6 +232,9 @@ RocketBoots.loadComponents([
 			}
 		});
 		$('.part-list').html(partListHTML);
+		// Write version
+		$version = $('.version');
+		$version.html(g.version);
 	}
 
 	function setupEvents() {
@@ -286,11 +291,15 @@ RocketBoots.loadComponents([
 					doBuildAction(pos);
 				}
 				//showSystemInfo(pos);
+				if (g.state.current.name === "space") {
+					selectPart(pos);
+				}
 			}
 			didMove = false;
 		});
 
 		// Button clicks
+		$('button.deselectPart').click(deselectPart);
 		$('button.space').click(function(){
 			g.state.transition("space");
 		});
@@ -302,8 +311,9 @@ RocketBoots.loadComponents([
 		$('button.scanners').click(toggleScanners);
 		$('button.miners').click(toggleMiners);
 		$('button.engines').click(toggleEngines);
-		$('button.navigation').click(showNavigation);
+		$('.showNavigation').click(showNavigation);
 		$('button.closeNavigation').click(closeNavigation);
+		$('button.closePartSelection').click(closePartSelection);
 		$('.found-locations-list').on('click', 'li', function(){
 			selectLocationAsTarget($(this).data("locationindex"));
 			updateNavigation();
@@ -314,14 +324,10 @@ RocketBoots.loadComponents([
 		$('button.deletePart').click(function(){
 			selectRemovePart();
 		});
-		$('button.selectPart').click(function(){
-			$('.part-selection').fadeIn();
-			$('.build-controls').hide();
-		});
+		$('button.selectBuildPart').click(openPartSelection);
 		$('.part-list').on('click', 'li', function(e){
-			selectPart($(this).data("parttypekey"));
-			$('.part-selection').fadeOut();
-			$('.build-controls').fadeIn();
+			selectBuildPart($(this).data("parttypekey"));
+			closePartSelection();
 		});
 		//g.stage.addClickEvent(showSystemInfo);
 	}
@@ -341,6 +347,7 @@ RocketBoots.loadComponents([
 		g.ship = new Starship({
 			world: g.world
 		});
+		g.ship.location.name = "Starter System";
 		//g.ship.addPart("corner", 		{x: -1, y: 1}, 3);
 		g.ship.addPart("corner-1", 		{x: 0, y: 1}, 0);
 		g.ship.addPart("structure", 	{x: 1, y: 1}, 0);
@@ -432,6 +439,12 @@ RocketBoots.loadComponents([
 	}
 
 	function drawInfo() {
+		drawShipInfo();
+		drawLocationInfo();
+		drawPartInfo();
+	}
+
+	function drawShipInfo() {
 		let e = g.ship.getEnergy();
 		let eMax = g.ship.getEnergyMax();
 		let ePercent = getPercentage(e, eMax);
@@ -442,12 +455,8 @@ RocketBoots.loadComponents([
 		let sMax = g.ship.getStorageMax();
 		let sPercent = getPercentage(s, sMax);
 
-		$('.energyNumbers').html(getNumberString(e) + ' / ' + eMax);
-		if (e <= 0) {
-			$('.energyNumbers').addClass("bad");
-		} else {
-			$('.energyNumbers').removeClass("bad");
-		}
+		$('.energyNumbers').html(getNumberString(e) + ' / ' + eMax)
+			.toggleClass("bad", (e <= 0));
 		$('.energy-info .bar').css("width", getMaxBarWidth(eMax) + "%");
 		$('.energy-info .bar > span').css("width", ePercent + "%");
 		$('.energy-info .rate').html(getRateString(g.ship.energyRate));
@@ -457,10 +466,50 @@ RocketBoots.loadComponents([
 		$('.scan-info .bar > span').css("width", nPercent + "%");
 		$('.scan-info .rate').html(getRateString(g.ship.scanRate));
 		
-		$('.storageNumbers').html(getNumberString(s) + ' / ' + sMax);
+		$('.storageNumbers').html(getNumberString(s) + ' / ' + sMax)
+			.toggleClass("bad", (sPercent === 100));
 		$('.storage-info .bar').css("width", getMaxBarWidth(sMax) + "%");
 		$('.storage-info .bar > span').css("width", sPercent + "%");
 		$('.storage-info .rate').html(getRateString(g.ship.oreRate));
+
+
+		{
+			let n = g.achievements.systemsExplored;
+			let percent = getPercentage(n, SYSTEM_EXPLORATION_GOAL);
+			$('.systems-explored .numbers').html(getNumberString(n) + ' / ' + SYSTEM_EXPLORATION_GOAL);
+			$('.systems-explored .bar > span').css("width", percent + "%");
+		}
+		{
+			let n = _.size(g.achievements.partTypesUnlocked);
+			let max = _.size(data.partTypes);
+			let percent = getPercentage(n, max);
+			$('.parts-unlocked .numbers').html(n + ' / ' + max);
+			$('.parts-unlocked .bar > span').css("width", percent + "%");
+		}
+	}
+
+	function drawLocationInfo() {
+		let name = "Deep Space";
+		let asteroids = 0;
+		let isTraveling = false;
+		// elements
+		let $locationInfo = $('.location-info');
+
+		if (g.ship.location instanceof Location) {
+			name = g.ship.location.name;
+			asteroids = g.ship.location.getAsteroids();
+		}
+		$locationInfo.find('.location-name').html(name);
+		if (asteroids) {
+			$locationInfo.find('.asteroids').fadeIn()
+				.find('.number').html(
+					getNumberString(Math.ceil(asteroids/MASS_PER_ASTEROID_FUDGE))
+				);
+			$locationInfo.find('.stardust').hide();
+		} else {
+			$locationInfo.find('.asteroids').hide();
+			$locationInfo.find('.stardust').fadeIn();
+		}
 
 		{
 			let numbersHTML;
@@ -478,19 +527,17 @@ RocketBoots.loadComponents([
 			$('.travel-info .bar > span').css("width", dPercent + "%");
 			$('.travel-info .rate').html(rate);
 		}
-		{
-			let n = g.achievements.systemsExplored;
-			let percent = getPercentage(n, SYSTEM_EXPLORATION_GOAL);
-			$('.systems-explored .numbers').html(getNumberString(n) + ' / ' + SYSTEM_EXPLORATION_GOAL);
-			$('.systems-explored .bar > span').css("width", percent + "%");
+	}
+
+	function drawPartInfo() {
+		if (g.selectedPart === null) {
+			$('.part-info').hide();
+			return;
 		}
-		{
-			let n = _.size(g.achievements.partTypesUnlocked);
-			let max = _.size(data.partTypes);
-			let percent = getPercentage(n, max);
-			$('.parts-unlocked .numbers').html(n + ' / ' + max);
-			$('.parts-unlocked .bar > span').css("width", percent + "%");
-		}
+		$('.part-info').show();
+		$('.part-type-name').html(g.selectedPart.type.name);
+		$('.part-energy').html(g.selectedPart.energy);
+		$('.part-lastEfficiency').html(g.selectedPart.lastEfficiency);
 	}
 
 	function getNumberString(n) {
@@ -572,7 +619,7 @@ RocketBoots.loadComponents([
 
 	//===========================================BUILD ACTIONS==================
 
-	function selectPart(partTypeKey) {
+	function selectBuildPart(partTypeKey) {
 		let part = data.partTypes[partTypeKey];
 		if (typeof part === "object") {
 			g.selectedPartTypeKey = partTypeKey;
@@ -586,7 +633,7 @@ RocketBoots.loadComponents([
 
 	function selectNextPart(n) {
 		if (g.selectedPartTypeKey === null) {
-			return selectPart("structure");
+			return selectBuildPart("structure");
 		}
 		n = (typeof n !== "number") ? 1 : n;
 		let partTypesArray = _.keys(data.partTypes);
@@ -594,7 +641,7 @@ RocketBoots.loadComponents([
 		i += n;
 		if (i < 0) { i = partTypesArray.length - 1; }
 		else if (i >= partTypesArray.length) { i = 0 }
-		selectPart(partTypesArray[i]);
+		selectBuildPart(partTypesArray[i]);
 	}
 
 	function selectPreviousPart() {
@@ -650,6 +697,14 @@ RocketBoots.loadComponents([
 	}
 
 	//===========================================SPACE ACTIONS==================
+
+	function selectPart(pos) {
+		g.selectedPart = g.ship.getNearestPart(pos);
+	}
+
+	function deselectPart() {
+		g.selectedPart = null;
+	}
 
 	function simulateShip() {
 		g.ship.simulate(0.25); // TODO: calculate t based on real time
@@ -762,6 +817,16 @@ RocketBoots.loadComponents([
 
 	function closeNavigation() {
 		$('.navigation-panel').hide();		
+	}
+
+	function openPartSelection() {
+		$('.part-selection').fadeIn();
+		$('.build-controls').hide();
+	}
+
+	function closePartSelection() {
+		$('.part-selection').fadeOut();
+		$('.build-controls').fadeIn();
 	}
 
 	function selectLocationAsTarget(locationIndex) {

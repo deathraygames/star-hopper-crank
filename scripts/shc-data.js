@@ -150,6 +150,7 @@ const defaultPartType = {
 
 _.each(partTypes, function(partType, partTypeKey){
 	_.defaults(partType, defaultPartType);
+	partType.key = partTypeKey;
 	partType.imageNames = {
 		"on": [partTypeKey + "-on"],
 		"off": [partTypeKey + "-off"]

@@ -30,7 +30,7 @@
 			with a handy, manual crank for generating energy.
 		</p>
 	</div>
-	<button type="button" class="space">Enter Deep Space</button>
+	<button type="button" class="space primary">Enter Deep Space</button>
 	<div class="credits">
 		<p>
 			Originally created in 48 hours for Ludum Dare 39, with the theme of "Running out of power". (<a href="ld39/">LDJAM version</a>)
@@ -41,8 +41,37 @@
 
 <section id="stage"></section>
 
+<button type="button" class="full-icon menu">
+	<i class="material-icons">menu</i>
+</button>
 
-<dl class="ship-info">
+<div class="info circle location-info">
+	<span class="location-name">Home</span>
+	<div class="asteroids">
+		<span class="number">0000</span> Asteroids
+	</div>
+	<div class="stardust">
+		Only stardust left in this system
+		<div class="bad">Your mining will be reduced</div>
+	</div>
+</div>
+
+<div class="info circle navigation-info clickable showNavigation">
+	<i class="material-icons">gps_fixed</i>
+	<div class="title">Navigation</div>
+	<!--
+	<div>No Target</div>
+	<div>Discovered</div>
+	-->
+</div>
+<!--
+<button type="button" class="full-icon info diagnostics">
+	<i class="material-icons">highlight</i>
+</button>
+-->
+
+
+<dl class="info ship-info">
 	<div class="parts-unlocked">
 		<dt><i class="material-icons">lock_open</i> Parts Unlocked</dt>
 		<dd class="numbers"></dd>
@@ -60,9 +89,6 @@
 				<span></span>
 			</span>
 		</dd>
-		<button type="button" class="navigation">
-			<i class="material-icons">gps_fixed</i> Navigation
-		</button>
 	</div>
 	<div class="travel-info">
 		<dt><i class="material-icons">change_history</i> Travel</dt>
@@ -73,9 +99,6 @@
 			</span>
 		</dd>
 		<dd class="rate"></dd>
-		<button type="button" class="engines">
-			<i class="material-icons">brightness_low</i> Engines
-		</button>
 	</div>
 	<div class="scan-info">
 		<dt><i class="material-icons">wifi_tethering</i> Scan</dt>
@@ -86,9 +109,6 @@
 			</span>
 		</dd>
 		<dd class="rate"></dd>
-		<button type="button" class="scanners">
-			<i class="material-icons">wifi_tethering</i> Scanners
-		</button>
 	</div>
 	<div class="energy-info">
 		<dt><i class="material-icons">flash_on</i> Energy</dt>
@@ -99,9 +119,6 @@
 			</span>
 		</dd>
 		<dd class="rate"></dd>
-		<button type="button" class="crank">
-			<i class="material-icons">flash_on</i> Crank
-		</button>
 	</div>
 	<div class="storage-info">
 		<dt><i class="material-icons">terrain</i> Ore</dt>
@@ -112,11 +129,20 @@
 			</span>
 		</dd>
 		<dd class="rate"></dd>
-		<button type="button" class="miners">
-			<i class="material-icons">terrain</i> Miners
-		</button>
 	</div>
 </dl>
+
+<div class="info part-info">
+	<dl>
+	<dt>Part Type</dt>
+	<dd class="part-type-name"></dd>
+	<dt>Efficiency</dt>
+	<dd class="part-lastEfficiency"></dd>
+	<dt>Energy</dt>
+	<dd class="part-energy"></dd>
+	</dl>
+	<button type="button" class="deselectPart">X</button>
+</div>
 
 <nav class="controls space-controls">
 	<button type="button" class="crank">
@@ -150,14 +176,8 @@
 	<button type="button" class="miners">
 		<i class="material-icons">terrain</i> Miners
 	</button>
-	<button type="button" class="navigation">
-		<i class="material-icons">gps_fixed</i> Navigation
-	</button>
 	<button type="button" class="build">
 		<i class="material-icons">settings</i> Build
-	</button>
-	<button type="button" class="full-icon menu">
-		<i class="material-icons">menu</i>
 	</button>
 </nav>
 <nav class="controls build-controls">
@@ -167,7 +187,7 @@
 	<button type="button" class="full-icon nextPart right-paired">
 		<i class="material-icons">keyboard_arrow_right</i>
 	</button>
-	<button type="button" class="selectPart">
+	<button type="button" class="selectBuildPart">
 		<i class="material-icons">keyboard_arrow_up</i> Select Part
 	</button>
 	<span>
@@ -224,6 +244,7 @@
 	<ul class="part-list select-list">
 		<!-- populated with js -->
 	</ul>
+	<button type="button" class="closePartSelection">Close</button>
 </section>
 
 <section class="messages">
