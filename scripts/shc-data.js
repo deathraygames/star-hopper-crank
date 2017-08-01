@@ -9,13 +9,14 @@ const partTypes = {
 		energyGain: 0.3,
 		gridSize: {x: 2, y: 2},
 		energyMax: 6,
-		animations: 4
+		animations: 4,
+		onDefault: false
 	},
 	"structure": {
 		name: "Structure Block",
 		icon: "border_all",
 		cost: 8,
-		energyMax: 1,
+		energyMax: 1
 	},
 	"corner-1": {
 		name: "Corner Structure (1)",

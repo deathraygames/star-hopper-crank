@@ -493,7 +493,7 @@ class Part {
 		this.gridPos = new RocketBoots.Coords(options.gridPos.x, options.gridPos.y);
 		this.energy = 0;
 		this.ore = 0;
-		this.isOn = true;
+		this.isOn = (this.type.energyUse) ? false : true;
 		this.rotation = rotations[rotationIndex];
 		this.animationFrame = null;
 		if (this.type.animations) {
