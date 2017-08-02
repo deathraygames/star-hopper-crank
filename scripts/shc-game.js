@@ -62,7 +62,7 @@ RocketBoots.loadComponents([
 			{"images": "ImageBank"},
 			{"keyboard": "Keyboard"}
 		],
-		version: "v1.0.4"
+		version: "v1.1.0"
 	});
 
 	var $version;
