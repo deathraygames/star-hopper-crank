@@ -173,7 +173,7 @@ RocketBoots.loadComponents([
 		setupImages(callback);
 		setupBuildCursors();
 		//selectRemovePart();
-		selectBuildPart("structure");
+		selectBuildPart("structure-E");
 	}
 
 	function setupImages(callback) {
@@ -352,12 +352,12 @@ RocketBoots.loadComponents([
 		g.ship.location.name = "Starter System";
 		//g.ship.addPart("corner", 		{x: -1, y: 1}, 3);
 		g.ship.addPart("corner-1", 		{x: 0, y: 1}, 0);
-		g.ship.addPart("structure", 	{x: 1, y: 1}, 0);
+		g.ship.addPart("structure-E", 	{x: 1, y: 1}, 0);
 		g.ship.addPart("corner-2", 		{x: 2, y: 1}, 0);
 		g.ship.addPart("engine-E", 		{x: 3, y: 0}, 0);
 
-		g.ship.addPart("structure", 	{x: 2, y: 0}, 1);
-		g.ship.addPart("structure", 	{x: 2, y: -1}, 0);
+		g.ship.addPart("structure-E", 	{x: 2, y: 0}, 1);
+		g.ship.addPart("structure-E", 	{x: 2, y: -1}, 0);
 		g.ship.addPart("corner-3", 	{x: 2, y: -2}, 1);
 
 		g.ship.addPart("cargo-space-E", {x: 1, y: -2}, 0);
@@ -651,7 +651,7 @@ RocketBoots.loadComponents([
 
 	function selectNextPart(n) {
 		if (g.selectedPartTypeKey === null) {
-			return selectBuildPart("structure");
+			return selectBuildPart("structure-E");
 		}
 		n = (typeof n !== "number") ? 1 : n;
 		let partTypesArray = _.keys(data.partTypes);

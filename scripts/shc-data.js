@@ -13,11 +13,17 @@ const partTypes = {
 		animations: 4,
 		onDefault: false
 	},
-	"structure": {
-		name: "Structure Block",
+	"structure-E": {
+		name: "Structure Block I",
 		icon: "border_all",
 		cost: 8,
 		energyMax: 5
+	},
+	"structure-D": {
+		name: "Structure Block II",
+		icon: "border_all",
+		cost: 16,
+		energyMax: 10
 	},
 	"corner-1": {
 		name: "Corner Structure (1)",
