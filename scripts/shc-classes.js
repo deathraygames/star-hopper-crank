@@ -265,15 +265,23 @@ class Starship {
 		});
 		return on;	
 	}
-	countOnByProperty(prop) {
+	countByProperty(prop) {
 		let c = 0;
 		_.each(this.parts, function(part){
-			if (part.type[prop] > 0 && part.isOn) {
-				c++;
-			}
+			if (part.type[prop] > 0) { c++;	}
 		});
 		return c;
 	}
+	countOnByProperty(prop) {
+		let c = 0;
+		_.each(this.parts, function(part){
+			if (part.type[prop] > 0 && part.isOn) {	c++; }
+		});
+		return c;
+	}
+	getMiners() {		return this.countByProperty("oreGain"); }
+	getScanners() {		return this.countByProperty("scanPower"); }
+	getEngines() {		return this.countByProperty("speed"); }
 	getMinersOn() {		return this.countOnByProperty("oreGain");	}
 	getScannersOn() {	return this.countOnByProperty("scanPower");	}
 	getEnginesOn() {	return this.countOnByProperty("speed");	}
@@ -417,27 +425,9 @@ class Starship {
 		ship.speedRate = 0;
 		ship.scanRate = 0;
 		ship.oreRate = 0;
-		// Gain and distribute energy
+		// Find nearest parts 
 		_.each(this.parts, function(part){
-			if (part.isOn && part.type.energyGain > 0) {
-				let nearParts = ship.getNearestPartsByPart(part);
-				let amountEach = (part.type.energyGain * t) / nearParts.length;
-				ship.energyRate += part.type.energyGain;
-				_.each(nearParts, function(nearPart){
-					nearPart.energy += amountEach;
-				});
-			}
-		});
-		// Pull energy from nearby sources if needed
-		_.each(this.parts, function(part){
-			if (part.isOn) {
-				if (part.type.energyUse > 0) {
-					let energyNeeded = (t * part.type.energyUse) - part.energy;
-					if (energyNeeded > 0) {
-						// TODO: Look for nearby power sources to draw from	
-					}
-				}
-			}
+			part.nearParts = ship.getNearestPartsByPart(part);
 		});
 		// Use up power and produce things
 		_.each(this.parts, function(part){
@@ -465,23 +455,50 @@ class Starship {
 		ship.scan(t);
 		ship.travel(t);
 		ship.mine(t);
-
-		// Redistribute and lose excess energy
+		// Gain energy
+		_.each(this.parts, function(part){
+			if (part.isOn && part.type.energyGain > 0) {
+				let energyMade = part.addEnergy((part.type.energyGain * t));
+				ship.energyRate = energyMade / t;
+			}
+		});
+		// Redistribute
 		_.each(this.parts, function(part){			
 			// TODO: tweak the redistribution
 			if (part.isOn) {
 				let energySpace = part.type.energyMax - part.energy;
 				if (energySpace > 0) {
-					let nearParts = ship.getNearestPartsByPart(part);
-					_.each(nearParts, function(nearPart){
-						if (nearPart.isOn && nearPart.energy > part.energy) {
-							let e = (t * 1);
+					_.each(part.nearParts, function(nearPart){
+						let diff = nearPart.energy - part.energy;
+						if (nearPart.isOn && diff > 0) {
+							let e = (t * diff) / 10;
+							e = Math.max(1, e);
 							e = nearPart.removeEnergy(e);
 							part.energy += e;
 						}
 					});
 				}
 			}
+		});
+		// Pull energy from nearby sources if needed
+		_.each(this.parts, function(part){
+			if (part.isOn) {
+				if (part.type.energyUse > 0) {
+					let energyNeeded = (t * part.type.energyUse) - part.energy;
+					if (energyNeeded > 0) {
+						let energyNeededPerPart = energyNeeded / part.nearParts.length;
+						_.each(part.nearParts, function(nearPart){
+							let e = (t * energyNeededPerPart);
+							e = nearPart.removeEnergy(e);
+							part.energy += e;
+						});
+					}
+				}
+			}
+		});
+
+		// Lose excess energy
+		_.each(this.parts, function(part){
 			part.loseExcessEnergy();
 		});
 	}

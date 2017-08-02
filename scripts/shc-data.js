@@ -6,9 +6,10 @@ const partTypes = {
 		name: "Starship Core",
 		icon: "border_outer",
 		cost: null, // not for sale
-		energyGain: 0.3,
+		energyGain: 1.5,
+		energyUse: 0.1,
 		gridSize: {x: 2, y: 2},
-		energyMax: 6,
+		energyMax: 30,
 		animations: 4,
 		onDefault: false
 	},
@@ -16,68 +17,68 @@ const partTypes = {
 		name: "Structure Block",
 		icon: "border_all",
 		cost: 8,
-		energyMax: 1
+		energyMax: 5
 	},
 	"corner-1": {
 		name: "Corner Structure (1)",
 		icon: "network_cell",
 		cost: 4,
-		energyMax: 1
+		energyMax: 5
 	},
 	"corner-2": {
 		name: "Corner Structure (2)",
 		icon: "network_cell",
 		cost: 4,
-		energyMax: 1
+		energyMax: 5
 	},
 	"corner-3": {
 		name: "Corner Structure (3)",
 		icon: "network_cell",
 		cost: 4,
-		energyMax: 1
+		energyMax: 5
 	},
 	"corner-4": {
 		name: "Corner Structure (4)",
 		icon: "network_cell",
 		cost: 4,
-		energyMax: 1
+		energyMax: 5
 	},
 	"battery-E": {
 		name: "Battery Class-E",
 		icon: "battery_charging_full",
 		cost: 20,
 		action: "toggle",
-		energyMax: 10
+		energyMax: 50
 	},
 	"battery-D": {
 		name: "Battery Class-D",
 		icon: "battery_charging_full",
-		cost: 200,
+		cost: 150,
 		action: "toggle",
-		energyMax: 30
+		energyMax: 400
 	},
 	"solar-panels-E": {
 		name: "Solar Panels E",
 		icon: "flash_on",
 		cost: 20,
 		action: "toggle",
-		energyGain: 1,
-		energyMax: 1
+		energyGain: 5,
+		energyMax: 5
 	},
 	"solar-panels-D": {
 		name: "Solar Panels D",
 		icon: "flash_on",
-		cost: 60,
+		cost: 80,
 		action: "toggle",
-		energyGain: 3,
-		energyMax: 3
+		energyGain: 25,
+		energyMax: 25
 	},
 	"cargo-space-E": {
 		name: "Small Cargo Space",
 		icon: "archive",
 		cost: 10,
 		storageMax: 10,
-		energyMax: 1
+		energyMax: 5
 	},
 	"miner-E": {
 		name: "Miner-Drones E",
@@ -85,17 +86,17 @@ const partTypes = {
 		cost: 20,
 		action: "toggle",
 		oreGain: 1,
-		energyUse: 2,
-		energyMax: 2
+		energyUse: 10,
+		energyMax: 10
 	},
 	"miner-D": {
 		name: "Miner-Drones D",
 		icon: "terrain",
-		cost: 200,
+		cost: 300,
 		action: "toggle",
 		oreGain: 5,
-		energyUse: 8,
-		energyMax: 8
+		energyUse: 40,
+		energyMax: 80
 	},
 	"telescope-E": {
 		name: "Telescope Class-E",
@@ -103,17 +104,17 @@ const partTypes = {
 		cost: 12,
 		action: "toggle",
 		scanPower: 0.5,
-		energyUse: 0.2,
-		energyMax: 1
+		energyUse: 1,
+		energyMax: 10
 	},
 	"telescope-D": {
 		name: "Telescope Class-D",
 		icon: "scanner",
-		cost: 200,
+		cost: 120,
 		action: "toggle",
-		scanPower: 3,
-		energyUse: 2,
-		energyMax: 2
+		scanPower: 4,
+		energyUse: 6,
+		energyMax: 24
 	},
 	"engine-E": {
 		name: "Engine Class-E",
@@ -121,17 +122,17 @@ const partTypes = {
 		cost: 20,
 		action: "toggle",
 		speed: 1,
-		energyUse: 1,
-		energyMax: 2
+		energyUse: 5,
+		energyMax: 5
 	},
 	"engine-D": {
 		name: "Engine Class-D",
 		icon: "brightness_low",
 		cost: 200,
 		action: "toggle",
-		speed: 5,
-		energyUse: 4,
-		energyMax: 4
+		speed: 8,
+		energyUse: 30,
+		energyMax: 30
 	}
 };
 

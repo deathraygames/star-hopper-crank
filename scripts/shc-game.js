@@ -67,6 +67,7 @@ RocketBoots.loadComponents([
 
 	var $version;
 
+	g.creativeMode = false;
 	g.discoverSystem = discoverSystem;
 	g.showMessage = showMessage;
 	g.giveFreeOre = giveFreeOre;
@@ -299,6 +300,7 @@ RocketBoots.loadComponents([
 		});
 
 		// Button clicks
+		$('button.switchToCreativeMode').click(switchToCreativeMode);
 		$('button.deselectPart').click(deselectPart);
 		$('button.space').click(function(){
 			g.state.transition("space");
@@ -439,12 +441,12 @@ RocketBoots.loadComponents([
 	}
 
 	function drawInfo() {
-		drawShipInfo();
+		drawDashboard();
 		drawLocationInfo();
 		drawPartInfo();
 	}
 
-	function drawShipInfo() {
+	function drawDashboard() {
 		let e = g.ship.getEnergy();
 		let eMax = g.ship.getEnergyMax();
 		let ePercent = getPercentage(e, eMax);
@@ -457,18 +459,15 @@ RocketBoots.loadComponents([
 
 		$('.energyNumbers').html(getNumberString(e) + ' / ' + eMax)
 			.toggleClass("bad", (e <= 0));
-		$('.energy-info .bar').css("width", getMaxBarWidth(eMax) + "%");
 		$('.energy-info .bar > span').css("width", ePercent + "%");
 		$('.energy-info .rate').html(getRateString(g.ship.energyRate));
 		
-		$('.scanNumbers').html(getNumberString(n) + ' / ' + nMax + '%');
-		$('.scan-info .bar').css("width", "100%");
+		$('.scanNumbers').html(getNumberString(n) + ' %');
 		$('.scan-info .bar > span').css("width", nPercent + "%");
 		$('.scan-info .rate').html(getRateString(g.ship.scanRate));
 		
 		$('.storageNumbers').html(getNumberString(s) + ' / ' + sMax)
 			.toggleClass("bad", (sPercent === 100));
-		$('.storage-info .bar').css("width", getMaxBarWidth(sMax) + "%");
 		$('.storage-info .bar > span').css("width", sPercent + "%");
 		$('.storage-info .rate').html(getRateString(g.ship.oreRate));
 
@@ -486,6 +485,29 @@ RocketBoots.loadComponents([
 			$('.parts-unlocked .numbers').html(n + ' / ' + max);
 			$('.parts-unlocked .bar > span').css("width", percent + "%");
 		}
+		drawSwitches();
+	}
+
+	function drawSwitches() {
+		let $dashboard = $('.dashboard');
+		let minersOn = g.ship.getMinersOn() / g.ship.getMiners();
+		let scannersOn = g.ship.getScannersOn() / g.ship.getScanners();
+		let enginesOn = g.ship.getEnginesOn() / g.ship.getEngines();
+
+		$dashboard.find('.energy-info .switch')
+			.toggleClass("on", g.ship.core.isOn);
+
+		$dashboard.find('.storage-info .switch')
+			.toggleClass("on", (minersOn == 1))
+			.toggleClass("partial", (minersOn > 0));
+
+		$dashboard.find('.travel-info .switch')
+			.toggleClass("on", (enginesOn == 1))
+			.toggleClass("partial", (enginesOn > 0));
+
+		$dashboard.find('.scan-info .switch')
+			.toggleClass("on", (scannersOn == 1))
+			.toggleClass("partial", (scannersOn > 0));		
 	}
 
 	function drawLocationInfo() {
@@ -534,14 +556,16 @@ RocketBoots.loadComponents([
 			$('.part-info').hide();
 			return;
 		}
-		$('.part-info').show();
+		$('.part-info').fadeIn();
 		$('.part-type-name').html(g.selectedPart.type.name);
-		$('.part-energy').html(g.selectedPart.energy);
-		$('.part-lastEfficiency').html(g.selectedPart.lastEfficiency);
+		$('.part-energy').html(getNumberString(g.selectedPart.energy));
+		$('.part-lastEfficiency').html(getNumberString(g.selectedPart.lastEfficiency));
+		$('.part-energyUse').html(g.selectedPart.type.energyUse || '--');
+		$('.part-energyMax').html(g.selectedPart.type.energyMax || '--');
 	}
 
 	function getNumberString(n) {
-		return (Math.floor( (n * 100) ) / 100);
+		return (Math.floor( (n * 10) ) / 10);
 	}
 
 	function getRateString(rate) {
@@ -559,11 +583,6 @@ RocketBoots.loadComponents([
 			return 0;
 		}
 		return Math.min(((x / xMax) * 100), 100);
-	}
-	function getMaxBarWidth(max) {
-		const someMax = 1000;
-		let barPercent = (max / someMax) * 100;
-		return Math.max(Math.min(100, barPercent), 30);
 	}
 
 	function updateBuildCursors(pos) {
@@ -627,7 +646,6 @@ RocketBoots.loadComponents([
 			g.buildCursor.image = part.images.on[0];
 			g.buildCursor.draw = {};
 			g.buildPlacement.color = CONSTRUCT_COLOR;
-			
 		}
 	}
 
@@ -673,7 +691,9 @@ RocketBoots.loadComponents([
 		let gridPos = g.ship.getNearestEmptyGridPosition(pos);
 		let partType = data.partTypes[partTypeKey];
 		let ore = g.ship.getOre();
-		if (typeof partType.cost === "number" && ore >= partType.cost) {
+		if (g.creativeMode) {
+			g.ship.addPart(partTypeKey, gridPos, rotationIndex);
+		} else if (typeof partType.cost === "number" && ore >= partType.cost) {
 			let notPaid = g.ship.removeOre(partType.cost);
 			if (notPaid > 0) {
 				g.showMessage("Something went wrong.");
@@ -696,14 +716,32 @@ RocketBoots.loadComponents([
 		}		
 	}
 
+	function switchToCreativeMode() {
+		if (g.creativeMode) {
+			alert("You're already in creative mode.");
+		} else {
+			if (confirm("Activate creative mode?\nYou'll be unable to earn achievements.")) {
+				g.creativeMode = true;
+				$('.switchToCreativeMode').hide();
+			}
+		}
+	}
+
 	//===========================================SPACE ACTIONS==================
 
 	function selectPart(pos) {
-		g.selectedPart = g.ship.getNearestPart(pos);
+		let p = g.ship.getNearestPart(pos);
+		if (p == g.selectedPart) {
+			deselectPart();
+		} else {
+			g.selectedPart = p;
+			$('.part-info').hide();
+		}
 	}
 
 	function deselectPart() {
 		g.selectedPart = null;
+		$('.part-info').hide();
 	}
 
 	function simulateShip() {
@@ -761,6 +799,7 @@ RocketBoots.loadComponents([
 		} else {
 			g.showMessage("Engines OFF");
 		}
+		drawSwitches();
 	}
 
 	function toggleScanners() {
@@ -771,6 +810,7 @@ RocketBoots.loadComponents([
 		}
 		h += 'Scanners ' + ((scannersOn) ? 'ON' : 'OFF');
 		g.showMessage(h);
+		drawSwitches();
 	}
 
 	function toggleMiners() {
@@ -783,18 +823,22 @@ RocketBoots.loadComponents([
 			g.ship.gainOre(0.1);
 		}
 		g.showMessage(h);
+		drawSwitches();
 	}
 
 	function toggleCore() {
 		let on = g.ship.toggleCore();
 		g.showMessage("Crank " + ((on) ? "ON" : "OFF"));
+		drawSwitches();
 	}
 
 	function arriveAtSystem() {
 		g.ship.location = g.ship.targetLocation;
 		g.ship.targetLocation = null;
 		g.showMessage("Arrived at " + g.ship.location.getNameWithType());
-		g.achievements.systemsExplored++;
+		if (!g.creativeMode) {
+			g.achievements.systemsExplored++;
+		}
 	}
 
 	function discoverSystem() {
@@ -805,9 +849,11 @@ RocketBoots.loadComponents([
 	}
 
 	function setPartsUnlocked() {
-		_.each(g.ship.parts, function(part){
-			g.achievements.partTypesUnlocked[part.partTypeKey] = true;
-		});
+		if (!g.creativeMode) {
+			_.each(g.ship.parts, function(part){
+				g.achievements.partTypesUnlocked[part.partTypeKey] = true;
+			});
+		}
 	}
 
 	function showNavigation() {
