@@ -17,7 +17,8 @@ RocketBoots.loadComponents([
 		DECONSTRUCT_COLOR = "rgba(200, 50, 0, 0.5)",
 		CONSTRUCT_COLOR = "rgba(0, 200, 50, 0.5)",
 		SYSTEM_EXPLORATION_GOAL = 30,
-		MASS_PER_ASTEROID_FUDGE = 20
+		MASS_PER_ASTEROID_FUDGE = 20,
+		STAR_MOVEMENT_MULTIPLIER = 3
 	;
 
 	var worldOptions = {
@@ -62,7 +63,7 @@ RocketBoots.loadComponents([
 			{"images": "ImageBank"},
 			{"keyboard": "Keyboard"}
 		],
-		version: "v1.1.0"
+		version: "v1.1.1"
 	});
 
 	var $version;
@@ -243,6 +244,7 @@ RocketBoots.loadComponents([
 		const WHEEL_SCALE = -800;
 		const MAX_ZOOM_PROPORTION = 2;
 		const MIN_ZOOM_PROPORTION = 0.1;
+		/*
 		$window.on('wheel', function(e){
 			let scale = (e.originalEvent.deltaY / WHEEL_SCALE);
 			let proportion = 1 + scale;
@@ -251,6 +253,7 @@ RocketBoots.loadComponents([
 			zoom(proportion);
 			e.preventDefault();
 		});
+		*/
 
 		let isDown = false;
 		let didMove = false;
@@ -443,6 +446,7 @@ RocketBoots.loadComponents([
 	function drawInfo() {
 		drawDashboard();
 		drawLocationInfo();
+		drawNavigationInfo();
 		drawPartInfo();
 	}
 
@@ -551,17 +555,33 @@ RocketBoots.loadComponents([
 		}
 	}
 
+	function drawNavigationInfo() {
+		let hasTarget = g.ship.hasTargetLocation();
+		let locNum = g.ship.foundLocations.length;
+		let $navInfo = $('.navigation-info');
+		$navInfo.find('.gps-icon').html(
+			((hasTarget) ? 'gps_fixed' : ((locNum) ? 'gps_not_fixed' : 'gps_off'))
+		);
+		$navInfo.find('.nav-target').toggle(hasTarget);
+		$navInfo.find('.nav-no-target').toggle(!hasTarget);
+		$navInfo.find('.nav-discovered .number').html(locNum);
+	}
+
 	function drawPartInfo() {
 		if (g.selectedPart === null) {
-			$('.part-info').hide();
+			$('.part-info').fadeOut();
 			return;
 		}
-		$('.part-info').fadeIn();
+		$('.part-info').finish().show();
 		$('.part-type-name').html(g.selectedPart.type.name);
 		$('.part-energy').html(getNumberString(g.selectedPart.energy));
 		$('.part-lastEfficiency').html(getNumberString(g.selectedPart.lastEfficiency));
-		$('.part-energyUse').html(g.selectedPart.type.energyUse || '--');
 		$('.part-energyMax').html(g.selectedPart.type.energyMax || '--');
+		$('.part-energy-gen-used').html(
+			'+' + (g.selectedPart.type.energyGain || 0)
+			+ ' -' + (g.selectedPart.type.energyUse || 0)
+		);
+
 	}
 
 	function getNumberString(n) {
@@ -571,9 +591,11 @@ RocketBoots.loadComponents([
 	function getRateString(rate) {
 		if (rate === 0) {
 			rate = '';
-		} else if (rate > 0) {
+		} else {
 			rate = getNumberString(rate);
-			rate = '+' + rate;
+			if (rate > 0) {
+				rate = '+' + rate;
+			}
 		}
 		return rate;
 	}
@@ -647,6 +669,7 @@ RocketBoots.loadComponents([
 			g.buildCursor.draw = {};
 			g.buildPlacement.color = CONSTRUCT_COLOR;
 		}
+		drawPartInfo();
 	}
 
 	function selectNextPart(n) {
@@ -735,13 +758,13 @@ RocketBoots.loadComponents([
 			deselectPart();
 		} else {
 			g.selectedPart = p;
-			$('.part-info').hide();
+			$('.part-info').fadeOut();
 		}
 	}
 
 	function deselectPart() {
 		g.selectedPart = null;
-		$('.part-info').hide();
+		$('.part-info').fadeOut();
 	}
 
 	function simulateShip() {
@@ -761,7 +784,7 @@ RocketBoots.loadComponents([
 	}
 
 	function moveStars() {
-		let starMoveX = Math.max((g.ship.speedRate * 2), 1);
+		let starMoveX = Math.max((g.ship.speedRate * STAR_MOVEMENT_MULTIPLIER), 1);
 		let starMoveY = (g.ship.speedRate > 0) ? 0 : 0.5;
 		let spaceSize2 = {
 			x: SPACE_SIZE_X * 2, y: SPACE_SIZE_Y * 2
@@ -805,9 +828,6 @@ RocketBoots.loadComponents([
 	function toggleScanners() {
 		let h = '';
 		let scannersOn = g.ship.toggleScanners();
-		if (g.ship.location instanceof Location) {
-			h += "At " + g.ship.location.getNameWithType() + '<br />';
-		}
 		h += 'Scanners ' + ((scannersOn) ? 'ON' : 'OFF');
 		g.showMessage(h);
 		drawSwitches();

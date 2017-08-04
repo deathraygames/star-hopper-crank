@@ -119,6 +119,13 @@ class Starship {
 		});
 		return Math.max(Math.min(ore, max), 0);
 	}
+	getStorageLeft() {
+		let left = 0;
+		_.each(this.parts, function(part){
+			left += part.getAvailableStorage();
+		});
+		return left;
+	}
 	getOre() {
 		return this.getStorageUsed();
 	}
@@ -404,7 +411,7 @@ class Starship {
 		}
 	}
 	mine(t) {
-		let ore = (this.oreRate * t); 
+		let ore = (this.oreRate * t);
 		if (this.location instanceof Location) {
 			let asteroidOre = this.location.mineAsteroid(ore);
 			if (asteroidOre === 0) {
@@ -425,7 +432,7 @@ class Starship {
 		ship.speedRate = 0;
 		ship.scanRate = 0;
 		ship.oreRate = 0;
-		// Find nearest parts 
+		// Find nearest parts and zero out rates
 		_.each(this.parts, function(part){
 			part.nearParts = ship.getNearestPartsByPart(part);
 		});
@@ -435,11 +442,10 @@ class Starship {
 				let efficiency = 1;
 				let energyNeeded = (t * part.type.energyUse)
 				let energyUsed = part.removeEnergy(energyNeeded);
-				ship.energyRate -= part.type.energyUse;
+				ship.energyRate -= energyUsed / t;
 				if (energyNeeded > 0 && energyUsed < energyNeeded) {
 					efficiency = energyUsed/energyNeeded;
 				}
-
 				if (part.type.oreGain > 0) {
 					ship.oreRate += (part.type.oreGain * efficiency);
 				}
@@ -458,8 +464,9 @@ class Starship {
 		// Gain energy
 		_.each(this.parts, function(part){
 			if (part.isOn && part.type.energyGain > 0) {
-				let energyMade = part.addEnergy((part.type.energyGain * t));
-				ship.energyRate = energyMade / t;
+				let energyGenerated = (part.type.energyGain * t);
+				let energyMade = part.addEnergy(energyGenerated, true);
+				ship.energyRate += energyMade / t;
 			}
 		});
 		// Redistribute
@@ -499,7 +506,8 @@ class Starship {
 
 		// Lose excess energy
 		_.each(this.parts, function(part){
-			part.loseExcessEnergy();
+			let lostEnergy = part.loseExcessEnergy();
+			ship.energyRate -= lostEnergy / t;
 		});
 	}
 
@@ -540,9 +548,11 @@ class Part {
 	getAvailableStorage() {
 		return this.type.storageMax - this.ore;
 	}
-	addEnergy(e) {
-		let possibleEnergy = this.type.energyMax - this.energy;
-		e = Math.min(possibleEnergy, e);
+	addEnergy(e, allowOverflow) {
+		if (!allowOverflow) {
+			let possibleEnergy = this.type.energyMax - this.energy;
+			e = Math.min(possibleEnergy, e);
+		}
 		this.energy += e;
 		return e;
 	}
@@ -589,7 +599,9 @@ class Part {
 		return image;
 	}
 	loseExcessEnergy() {
-		this.energy = Math.min(this.energy, this.type.energyMax);
+		let lost = Math.max((this.energy - this.type.energyMax), 0);
+		lost = this.removeEnergy(lost);
+		return lost;
 	}
 }
 

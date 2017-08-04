@@ -19,6 +19,9 @@
 		<span class="subtitle">Crank</span>
 	</h1>
 	<span class="version">-</span>
+
+	<button type="button" class="space primary">Enter Deep Space</button>
+
 	<div class="instructions">
 		<p>
 			You are a galactic explorer, deep in uncharted space aboard a new, experimental, modular-designed "Crank" ship.
@@ -30,12 +33,18 @@
 			with a handy, manual crank for generating energy.
 		</p>
 	</div>
-	<button type="button" class="space primary">Enter Deep Space</button>
 	<div class="credits">
 		<p>
-			Originally created in 48 hours for Ludum Dare 39, with the theme of "Running out of power". (<a href="ld39/">LDJAM version</a>)
+			Originally created in 48 hours for Ludum Dare 39, with the theme of "Running out of power". (<a href="https://ldjam.com/events/ludum-dare/39/star-hopper-crank" target="_blank">LDJAM entry</a>)
+		</p>
+		<p class="social-links">
+			<a href="https://ldjam.com/users/deathray" target="_blank">Ludum Dare</a>
+			<a href="https://www.reddit.com/r/deathraygames/" target="_blank">Reddit /r/deathraygames/</a>
+			<a href="https://deathraygames.tumblr.com/" target="_blank">Tumblr</a>
+			<a href="https://twitter.com/deathraygames" target="_blank">Twitter</a>
 		</p>
 	</div>
+
 </section>
 
 
@@ -57,12 +66,11 @@
 </div>
 
 <div class="info circle navigation-info clickable showNavigation">
-	<i class="material-icons">gps_fixed</i>
+	<i class="material-icons gps-icon">gps_fixed</i>
 	<div class="title">Navigation</div>
-	<!--
-	<div>No Target</div>
-	<div>Discovered</div>
-	-->
+	<div class="nav-no-target">No Target</div>
+	<div class="nav-target">TARGET SET</div>
+	<div class="nav-discovered"><span class="number"></span> Discovered</div>
 </div>
 <!--
 <button type="button" class="full-icon info diagnostics">
@@ -116,7 +124,6 @@
 		</button>
 	</div>
 	<div>
-		<i class="material-icons">lock_open</i>
 		Achievements
 		<div class="achievement-list">
 			<div class="parts-unlocked">
@@ -197,12 +204,13 @@
 <div class="info part-info">
 	<div class="part-type-name">Part Type Name</div>
 	<dl>
-		<dt>Energy / Required / Max</dt>
+		<dt>Energy / Max</dt>
 		<dd>
 			<span class="part-energy"></span> / 
-			<span class="part-energyUse"></span> / 
 			<span class="part-energyMax"></span>
 		</dd>
+		<dt>Energy Generated - Used</dt>
+		<dd class="part-energy-gen-used"></dd>
 		<dt>Efficiency</dt>
 		<dd class="part-lastEfficiency"></dd>
 	</dl>

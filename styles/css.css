@@ -28,6 +28,11 @@ a:hover {
 	color: white;
 }
 
+.social-links > a {
+	display: inline-block;
+	padding: 0.5em 0.5em;
+}
+
 
 .splash {
 	text-align: center;
@@ -48,8 +53,10 @@ a:hover {
 		line-height: 1.5em;
 	}
 	.credits {
-		margin: 3em auto;
-		opacity: 0.8;
+		border-top: solid 1px rgba(150, 219, 250, 0.3);
+		margin: 2em auto;
+		padding: 1em 0;
+		opacity: 0.7;
 		font-size: 90%;
 		max-width: 25em;
 	}
@@ -86,7 +93,8 @@ button {
 }
 	button:hover {
 		border-color: rgba(150, 219, 250, 1);
-		color: rgba(150, 219, 250, 1);		
+		color: rgba(150, 219, 250, 1);	
+		background-color: rgba(150, 219, 250, 0.2);	
 	}
 	button:active {
 		border-color: #ff0;
@@ -123,6 +131,12 @@ button.full-icon .material-icons,
 
 button.build {
 	/* float: right; */
+}
+
+button.space {
+	display: block;
+	margin: 2% auto;
+	padding: 1.5em 3em;
 }
 
 button.menu {
@@ -180,6 +194,9 @@ button.highlight {
 	}
 	.navigation-info .title {
 		padding-bottom: 0.5em;
+	}
+	.nav-discovered {
+		padding-top: 0.5em;
 	}
 
 .dashboard {
