@@ -63,7 +63,7 @@ RocketBoots.loadComponents([
 			{"images": "ImageBank"},
 			{"keyboard": "Keyboard"}
 		],
-		version: "v1.1.1"
+		version: "v1.1.2"
 	});
 
 	var $version;
@@ -84,6 +84,7 @@ RocketBoots.loadComponents([
 	g.selectedPart = null;
 	g.buildCursor = null;
 	g.buildPlacement = null;
+	g.lastSimTick = null;
 
 	g.state.transition("setup");
 
@@ -116,6 +117,7 @@ RocketBoots.loadComponents([
 		g.world.entities.stars.forEach(function(starEnt){
 			starEnt.isVisible = true;
 		});
+		g.lastSimTick = new Date();
 		g.loop.start();
 		drawAll();
 	}
@@ -365,9 +367,10 @@ RocketBoots.loadComponents([
 
 		g.ship.addPart("cargo-space-E", {x: 1, y: -2}, 0);
 		g.ship.addPart("miner-E", 		{x: 0, y: -2}, 2);
-		//g.ship.addPart("corner", 		{x: -1, y: -2}, 2);
-		g.ship.addPart("telescope-E", 	{x: -1, y: -1}, 3);
+		g.ship.addPart("corner-4", 		{x: -1, y: -2}, 2);
+		g.ship.addPart("structure-E", 	{x: -1, y: -1}, 3);
 		g.ship.addPart("corner-1", 		{x: -1, y: 0}, 3);
+		g.ship.addPart("telescope-E", 	{x: -2, y: -1}, 3);
 
 		//g.ship.addPart("engine-E", 		{x: 3, y: 0}, 1);
 
@@ -545,7 +548,7 @@ RocketBoots.loadComponents([
 			let dPercent = getPercentage(traveled, dMax);
 			let rate = getRateString(g.ship.speedRate);
 			if (g.ship.hasTargetLocation()) {
-				numbersHTML = getNumberString(d) + " / " + dMax;
+				numbersHTML = getNumberString(traveled) + " / " + dMax;
 			} else {
 				numbersHTML = "--";
 			}
@@ -575,7 +578,7 @@ RocketBoots.loadComponents([
 		$('.part-info').finish().show();
 		$('.part-type-name').html(g.selectedPart.type.name);
 		$('.part-energy').html(getNumberString(g.selectedPart.energy));
-		$('.part-lastEfficiency').html(getNumberString(g.selectedPart.lastEfficiency));
+		$('.part-lastEfficiency').html((getNumberString(g.selectedPart.lastEfficiency) * 100) + '%');
 		$('.part-energyMax').html(g.selectedPart.type.energyMax || '--');
 		$('.part-energy-gen-used').html(
 			'+' + (g.selectedPart.type.energyGain || 0)
@@ -768,7 +771,10 @@ RocketBoots.loadComponents([
 	}
 
 	function simulateShip() {
-		g.ship.simulate(0.25); // TODO: calculate t based on real time
+		let now = new Date();
+		let elapsedSeconds = (now - g.lastSimTick) / 1000;
+		g.lastSimTick = now;
+		g.ship.simulate(elapsedSeconds);
 		if (g.ship.isScanDone()) {
 			// TODO: chance to find multiple systems
 			discoverSystem();

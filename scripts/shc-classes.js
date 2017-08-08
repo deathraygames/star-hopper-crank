@@ -417,7 +417,8 @@ class Starship {
 			if (asteroidOre === 0) {
 				// Need to always allow some amount of ore to be gained
 				// or it is easy to get stuck
-				this.gainOre((ore / 5));
+				let stardustAmount = (ore / 7);
+				this.gainOre(stardustAmount);
 			} else {
 				this.gainOre(asteroidOre);
 			}
@@ -426,12 +427,19 @@ class Starship {
 		}
 	}
 	simulate(t) {
+		const MINE_STARDUST_MULTIPLIER = 0.2;
 		let ship = this;
 		let energy = 0; 
+		let hasAsteroid = false;
 		ship.energyRate = 0;
 		ship.speedRate = 0;
 		ship.scanRate = 0;
 		ship.oreRate = 0;
+		if (this.location !== null) {
+			if (this.location.hasAsteroid()) {
+				hasAsteroid = true;
+			}
+		}
 		// Find nearest parts and zero out rates
 		_.each(this.parts, function(part){
 			part.nearParts = ship.getNearestPartsByPart(part);
@@ -448,6 +456,9 @@ class Starship {
 				}
 				if (part.type.oreGain > 0) {
 					ship.oreRate += (part.type.oreGain * efficiency);
+					if (!hasAsteroid) {
+						ship.oreRate = ship.oreRate * MINE_STARDUST_MULTIPLIER;
+					}
 				}
 				if (part.type.scanPower > 0) {
 					ship.scanRate += (part.type.scanPower * efficiency);
@@ -522,6 +533,9 @@ class Part {
 		this.partTypeKey = options.partTypeKey;
 		this.isCore = (this.partTypeKey === "core") ? true : false;
 		this.type = data.partTypes[this.partTypeKey];
+		if (this.type === undefined) {
+			console.error("Unknown part type:", this.partTypeKey);
+		}
 		this.gridPos = new RocketBoots.Coords(options.gridPos.x, options.gridPos.y);
 		this.energy = 0;
 		this.ore = 0;
