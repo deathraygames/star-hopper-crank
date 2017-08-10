@@ -387,7 +387,7 @@ button .switch {
 
 .part-selection {
 	display: none;
-	position: fixed; z-index: 4;
+	position: absolute; z-index: 4;
 	top: 0; left: 0;
 	bottom: 0;
 	width: 100%;
@@ -421,9 +421,10 @@ button .switch {
 
 .navigation-panel {
 	display: none;
-	position: fixed; z-index: 4;
-	top: 0; bottom: 0;
-	width: 100%;
+	position: absolute; z-index: 4;
+	top: 0;
+	left: 0; right: 0;
+	min-height: 100%;
 	text-align: center;
 	background: rgba(0, 0, 0, 0.9);
 }

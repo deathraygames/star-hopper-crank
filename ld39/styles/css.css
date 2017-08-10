@@ -198,7 +198,7 @@ button.build {
 
 .part-selection {
 	display: none;
-	position: fixed; z-index: 4;
+	position: absolute; z-index: 4;
 	top: 0; left: 0;
 	bottom: 0;
 	width: 100%;
@@ -232,13 +232,15 @@ button.build {
 
 .navigation-panel {
 	display: none;
-	position: fixed; z-index: 4;
-	top: 0; bottom: 0;
+	position: absolute; z-index: 4;
+	top: 0; 
 	width: 100%;
+	min-height: 100%;
 	text-align: center;
 	background: rgba(0, 0, 0, 0.9);
 }
 	.navigation-panel > div {
+
 		max-width: 20em;
 		margin: 5% auto;
 	}

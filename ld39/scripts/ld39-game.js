@@ -61,7 +61,7 @@ RocketBoots.loadComponents([
 			{"images": "ImageBank"},
 			{"keyboard": "Keyboard"}
 		],
-		version: "ld39-v1.0.3"
+		version: "ld39-v1.0.4"
 	});
 
 	var $version;
@@ -234,18 +234,8 @@ RocketBoots.loadComponents([
 
 	function setupEvents() {
 		const $window = $(window);
-		const WHEEL_SCALE = -800;
 		const MAX_ZOOM_PROPORTION = 2;
 		const MIN_ZOOM_PROPORTION = 0.1;
-		$window.on('wheel', function(e){
-			let scale = (e.originalEvent.deltaY / WHEEL_SCALE);
-			let proportion = 1 + scale;
-			proportion = Math.min(MAX_ZOOM_PROPORTION, proportion);
-			proportion = Math.max(MIN_ZOOM_PROPORTION, proportion);
-			zoom(proportion);
-			e.preventDefault();
-		});
-
 		let isDown = false;
 		let didMove = false;
 		let downPos = new RocketBoots.Coords();
